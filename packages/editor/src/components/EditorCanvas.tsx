@@ -7,6 +7,16 @@ function RenderNode({ node }: { node: any }) {
   const selectedId = useEditorStore((s) => s.selectedId);
   const selectNode = useEditorStore((s) => s.selectNode);
 
+  if (node.type === "Page") {
+    return (
+      <div>
+        {node.children?.map((child: any) => (
+          <RenderNode key={child.id} node={child} />
+        ))}
+      </div>
+    );
+  }
+
   const meta = widgetRegistry[node.type];
   if (!meta) return null;
   const Comp = meta.component;
