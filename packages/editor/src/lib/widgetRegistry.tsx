@@ -3,6 +3,7 @@ import HeadingWidget from "../widgets/HeadingWidget";
 import TextWidget from "../widgets/TextWidget";
 import ButtonWidget from "../widgets/ButtonWidget";
 import SectionWidget from "../widgets/SectionWidget";
+import PageWidget from "../widgets/PageWidget";
 
 export type WidgetMeta = {
   component: React.ComponentType<any>;
@@ -13,6 +14,13 @@ export type WidgetMeta = {
 };
 
 export const widgetRegistry: Record<string, WidgetMeta> = {
+  Page: {
+    component: PageWidget,
+    name: "Page",
+    defaultProps: {},
+    isContainer: true,
+    icon: "📄"
+  },
   Section: {
     component: SectionWidget,
     name: "Section",
