@@ -10,7 +10,6 @@
     "paths": {
       "@editor/*": ["packages/editor/src/*"],
       "@schema/*": ["packages/schema/src/*"],
-      "@ui/*": ["packages/ui/src/*"],
       "@utils/*": ["packages/utils/src/*"]
     }
   }

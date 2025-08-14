@@ -1,1 +1,1 @@
-export declare function Editor(): any;
+export declare function Editor(): import("react/jsx-runtime").JSX.Element;

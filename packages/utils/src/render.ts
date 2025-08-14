@@ -7,10 +7,9 @@ export function renderToHtml(node: TPageNode): string {
   };
   const tag = map[node.type] ?? "div";
   const attrs = Object.entries(node.props || {})
-    .filter(([k]) => !["text", "children"].includes(k))
+    .filter(([k]) => !["text", "label", "children"].includes(k))
     .map(([k, v]) => `${k}="${String(v)}"`).join(" ");
-  const inner =
-    (node.children?.map(renderToHtml).join("") ?? "") ||
-    (node.props?.text ?? "");
-  return `<${tag}${attrs ? " " + attrs : ""}>${inner}</${tag}>`;
+  const children = (node.children?.map(renderToHtml).join("") ?? "");
+  const text = node.props?.text ?? node.props?.label ?? "";
+  return `<${tag}${attrs ? " " + attrs : ""}>${children || text}</${tag}>`;
 }

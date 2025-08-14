@@ -1,5 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "outDir": "dist", "declaration": true, "strict": false },
+  "compilerOptions": {
+    "outDir": "dist",
+    "declaration": true,
+    "jsx": "react-jsx",
+    "types": ["react", "react-dom"],
+    "skipLibCheck": true
+  },
   "include": ["src"]
 }

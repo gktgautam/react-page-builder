@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const PageNode = z.lazy(() =>
+export const PageNode = z.lazy((): z.ZodTypeAny =>
   z.object({
     id: z.string(),
     type: z.string(),
@@ -9,5 +9,5 @@ export const PageNode = z.lazy(() =>
   })
 );
 
-export type TPageNode = z.infer<typeof PageNode>;
 export const PageSchema = PageNode;
+export type TPageNode = z.infer<typeof PageNode>;
