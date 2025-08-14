@@ -23,7 +23,12 @@ function deepMap(node: PageNode, fn: (n: PageNode) => PageNode): PageNode {
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
-  page: { id: "root", type: "Page", props: {}, children: [] },
+  page: {
+    id: "root",
+    type: "Page",
+    props: {},
+    children: [{ id: "section-1", type: "Section", props: {}, children: [] }]
+  },
   selectedId: null,
   hoveredId: null,
   expandedNodes: [],
