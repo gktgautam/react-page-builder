@@ -25,7 +25,8 @@ function TreeItem({ node, depth, parentId }:{
 
   const { setNodeRef: setDropRef, isOver } = useDroppable({
     id: `drop-${node.id}`,
-    data: { isContainer: true, parentId: node.id }
+    data: { isContainer, parentId: node.id },
+    disabled: !isContainer
   });
 
   const style = {
@@ -45,7 +46,10 @@ function TreeItem({ node, depth, parentId }:{
   const isExpanded = expandedNodes.includes(node.id);
 
   return (
-    <div ref={setDropRef} style={{ background: isOver ? "#eef6ff" : undefined }}>
+    <div
+      ref={setDropRef}
+      style={{ background: isContainer && isOver ? "#eef6ff" : undefined }}
+    >
       <div
         ref={setNodeRef}
         {...attributes}
@@ -94,7 +98,9 @@ export function LayersPanel() {
     const activeId = String(active.id);
     const overId = String(over.id);
 
-    if (overId.startsWith("drop-")) {
+    const dropZone = overId.startsWith("drop-") && over.data.current?.isContainer;
+
+    if (dropZone) {
       const newParentId = over.data.current?.parentId as string;
       moveNode(activeId, newParentId, 0);
       return;
