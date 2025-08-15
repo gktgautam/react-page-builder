@@ -3,13 +3,14 @@ import { nanoid } from "nanoid";
 import { widgetRegistry } from "../lib/widgetRegistry";
 import { useEditorStore } from "../lib/store";
 import { TemplateGallery } from "./TemplateGallery";
+import { Panel, PanelHeader } from "@ui/core";
 
 export function Sidebar() {
   const addChild = useEditorStore((s) => s.addChild);
   return (
-    <aside className="w-64 bg-white border-r p-3 space-y-3">
+    <Panel side="left" className="p-3 space-y-3">
       <div>
-        <h3 className="font-bold mb-2">Widgets</h3>
+        <PanelHeader className="mb-2">Widgets</PanelHeader>
         <div className="space-y-2">
           {Object.entries(widgetRegistry).map(([type, meta]) => (
             <button
@@ -33,7 +34,7 @@ export function Sidebar() {
       <div className="pt-2 border-t">
         <SaveLoadButtons />
       </div>
-    </aside>
+    </Panel>
   );
 }
 

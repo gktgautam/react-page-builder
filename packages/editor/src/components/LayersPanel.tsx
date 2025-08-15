@@ -8,6 +8,7 @@ import {
   SortableContext, useSortable, verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Panel, PanelHeader, IconButton } from "@ui/core";
 
 function TreeItem({ node, depth, parentId }:{
   node: any; depth: number; parentId: string;
@@ -60,14 +61,14 @@ function TreeItem({ node, depth, parentId }:{
         onClick={(e) => { e.stopPropagation(); selectNode(node.id); }}
       >
         {isContainer && (
-          <button
+          <IconButton
             onClick={(e) => { e.stopPropagation(); toggleExpand(node.id); }}
-            className="w-4 h-4 mr-1 text-xs border rounded bg-gray-50"
+            className="mr-1 text-xs"
             aria-label={isExpanded ? "Collapse" : "Expand"}
             title={isExpanded ? "Collapse" : "Expand"}
           >
             {isExpanded ? "−" : "+"}
-          </button>
+          </IconButton>
         )}
         <span className="mr-1">{icon || "📄"}</span>
         {name || node.type}
@@ -112,8 +113,8 @@ export function LayersPanel() {
   };
 
   return (
-    <aside className="w-64 bg-white border-l overflow-auto">
-      <h3 className="font-bold p-3 border-b">Navigation</h3>
+    <Panel side="right" className="overflow-auto">
+      <PanelHeader className="p-3 border-b">Navigation</PanelHeader>
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
           items={(page.children || []).map((c: any) => c.id)}
@@ -124,6 +125,6 @@ export function LayersPanel() {
           ))}
         </SortableContext>
       </DndContext>
-    </aside>
+    </Panel>
   );
 }
