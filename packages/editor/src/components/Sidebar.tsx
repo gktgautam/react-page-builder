@@ -5,41 +5,17 @@ import { useEditorStore } from "../lib/store";
 import { TemplateGallery } from "./TemplateGallery";
 import { Panel, PanelHeader } from "@ui/core";
 import { findNode } from "../lib/findNode";
+import { useDraggable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 
 export function Sidebar() {
-  const addChild = useEditorStore((s) => s.addChild);
-  const selectedId = useEditorStore((s) => s.selectedId);
-  const page = useEditorStore((s) => s.page);
-
   return (
     <Panel side="left" className="p-3 space-y-3">
       <div>
         <PanelHeader className="mb-2">Widgets</PanelHeader>
         <div className="space-y-2">
           {Object.entries(widgetRegistry).map(([type, meta]) => (
-            <button
-              key={type}
-              className="w-full text-left px-2 py-1 border rounded hover:bg-gray-100"
-              onClick={() => {
-                const selectedNode = findNode(page, selectedId);
-                const container =
-                  selectedNode && widgetRegistry[selectedNode.type]?.isContainer
-                    ? selectedNode
-                    : page; // root
-                addChild(
-                  container.id,
-                  {
-                    id: nanoid(),
-                    type,
-                    props: JSON.parse(JSON.stringify(meta.defaultProps)),
-                    children: meta.isContainer ? [] : undefined
-                  } as any,
-                  (container.children?.length || 0)
-                );
-              }}
-            >
-              {meta.icon} {meta.name}
-            </button>
+            <WidgetButton key={type} type={type} meta={meta} />
           ))}
         </div>
       </div>
@@ -48,6 +24,54 @@ export function Sidebar() {
         <SaveLoadButtons />
       </div>
     </Panel>
+  );
+}
+
+function WidgetButton({
+  type,
+  meta
+}: {
+  type: string;
+  meta: (typeof widgetRegistry)[string];
+}) {
+  const addChild = useEditorStore((s) => s.addChild);
+  const selectedId = useEditorStore((s) => s.selectedId);
+  const page = useEditorStore((s) => s.page);
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: `widget-${type}`,
+    data: { widgetType: type }
+  });
+  const style = {
+    transform: CSS.Translate.toString(transform)
+  };
+
+  return (
+    <button
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="w-full text-left px-2 py-1 border rounded hover:bg-gray-100 cursor-grab"
+      onClick={() => {
+        const selectedNode = findNode(page, selectedId);
+        const container =
+          selectedNode && widgetRegistry[selectedNode.type]?.isContainer
+            ? selectedNode
+            : page; // root
+        addChild(
+          container.id,
+          {
+            id: nanoid(),
+            type,
+            props: JSON.parse(JSON.stringify(meta.defaultProps)),
+            children: meta.isContainer ? [] : undefined
+          } as any,
+          container.children?.length || 0
+        );
+      }}
+    >
+      {meta.icon} {meta.name}
+    </button>
   );
 }
 
@@ -66,6 +90,7 @@ function SaveLoadButtons() {
               body: JSON.stringify(page)
             });
             if (!res.ok) throw new Error("Failed to save");
+            localStorage.setItem("saved-page", JSON.stringify(page));
             alert("Saved!");
           } catch (err) {
             alert(
@@ -94,6 +119,14 @@ function SaveLoadButtons() {
         }}
       >
         Load
+      </button>
+      <button
+        className="px-3 py-1 border rounded"
+        onClick={() => {
+          window.open("/preview", "_blank");
+        }}
+      >
+        Preview
       </button>
       <button
         className="px-3 py-1 border rounded"
