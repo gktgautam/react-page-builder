@@ -46,7 +46,7 @@ test('escapes text content', () => {
 test('escapes quotes in text', () => {
   const node = {
     type: 'Text',
-    props: { desktop: { text: '"Hello" & \u0027World\u0027' } }
+    props: { text: '"Hello" & \u0027World\u0027' }
   };
   const html = renderToHtml(node);
   assert.equal(html, '<p>&quot;Hello&quot; &amp; &#39;World&#39;</p>');
@@ -55,7 +55,7 @@ test('escapes quotes in text', () => {
 test('escapes attribute values', () => {
   const node = {
     type: 'Button',
-    props: { desktop: { href: 'https://example.com?a=1&b=2', label: '<Click>' } }
+    props: { href: 'https://example.com?a=1&b=2', label: '<Click>' }
   };
   const html = renderToHtml(node);
   assert.equal(html, '<a href="https://example.com?a=1&amp;b=2">&lt;Click&gt;</a>');
@@ -64,7 +64,7 @@ test('escapes attribute values', () => {
 test('escapes quotes in attributes', () => {
   const node = {
     type: 'Button',
-    props: { desktop: { title: '"Hello" and \u0027World\u0027', label: 'btn' } }
+    props: { title: '"Hello" and \u0027World\u0027', label: 'btn' }
   };
   const html = renderToHtml(node);
   assert.equal(html, '<a title="&quot;Hello&quot; and &#39;World&#39;">btn</a>');

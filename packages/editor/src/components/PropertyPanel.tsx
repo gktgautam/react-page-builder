@@ -4,12 +4,13 @@ import { useEditorStore } from "../lib/store";
 import { Panel, PanelHeader, InputField } from "@ui/core";
 import { findNode } from "../lib/findNode";
 import { widgetRegistry } from "../lib/widgetRegistry";
+import { resolveProps } from "../lib/resolveProps";
 
 export function PropertyPanel() {
   const page = useEditorStore((s) => s.page);
   const selectedId = useEditorStore((s) => s.selectedId);
   const updateProps = useEditorStore((s) => s.updateProps);
-  const viewport = useEditorStore((s) => s.viewport);
+  const viewport = useEditorStore((s) => s.activeBreakpoint);
 
   const selectedNode = useMemo(() => findNode(page, selectedId), [page, selectedId]);
 
@@ -22,7 +23,7 @@ export function PropertyPanel() {
     );
   }
 
-  const props = (selectedNode.props as any)[viewport] || {};
+  const props = resolveProps(selectedNode as any, viewport);
   const baseProps = (selectedNode.props as any).desktop || {};
   const schema = widgetRegistry[selectedNode.type]?.propsSchema || {};
   const keys = Object.keys(schema);

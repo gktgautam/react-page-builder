@@ -2,14 +2,18 @@
 import * as React from "react";
 
 interface ColumnWidgetProps {
-  id?: string;
+  id: string;
   children?: React.ReactNode;
-  width?: string;
+  span?: number;
 }
 
-export default function ColumnWidget({ children, width }: ColumnWidgetProps) {
+export default function ColumnWidget({ id, children, span = 12 }: ColumnWidgetProps) {
   return (
-    <div className="min-h-[24px]" style={{ width }}>
+    <div
+      data-node-id={id}
+      data-node-type="Column"
+      style={{ minHeight: "24px", gridColumn: `span ${span} / span ${span}` }}
+    >
       {children}
     </div>
   );

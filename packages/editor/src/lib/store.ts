@@ -9,7 +9,7 @@ interface EditorState {
   selectedId: string | null;
   hoveredId: string | null;
   expandedNodes: string[];
-  viewport: 'desktop' | 'tablet' | 'mobile';
+  activeBreakpoint: 'desktop' | 'tablet' | 'mobile';
   selectNode: (id: string | null) => void;
   hoverNode: (id: string | null) => void;
   toggleExpand: (id: string) => void;
@@ -17,7 +17,7 @@ interface EditorState {
   addChild: (parentId: string, node: PageNode, index?: number) => void;
   moveNode: (id: string, newParentId: string, index: number) => void;
   updateProps: (id: string, newProps: Record<string, unknown>) => void;
-  setViewport: (v: 'desktop' | 'tablet' | 'mobile') => void;
+  setActiveBreakpoint: (v: 'desktop' | 'tablet' | 'mobile') => void;
 }
 
 function deepMap(node: PageNode, fn: (n: PageNode) => PageNode): PageNode {
@@ -37,36 +37,60 @@ function findAncestorIds(node: PageNode, targetId: string): string[] | null {
 
 export const useEditorStore = create<EditorState>((set) => ({
   page: {
-    id: "root",
+    id: "page-root",
     type: "Page",
-    props: { desktop: {} },
+    props: {},
     children: [
       {
         id: "section-1",
         type: "Section",
-        props: { desktop: {} },
+        props: {
+          layoutStyle: "contained",
+          padding: "24px",
+          backgroundColor: "#f7f7f7",
+        },
         children: [
           {
             id: "row-1",
             type: "Row",
-            props: { desktop: {} },
+            props: {},
             children: [
               {
-                id: "column-1",
+                id: "col-1",
                 type: "Column",
-                props: { desktop: {} },
-                children: []
-              }
-            ]
-          }
-        ]
-      }
-    ]
+                props: { span: 12 },
+                responsive: { desktop: { span: 6 } },
+                children: [
+                  {
+                    id: "heading-1",
+                    type: "Heading",
+                    props: { text: "Hello", fontSize: "32px" },
+                  },
+                ],
+              },
+              {
+                id: "col-2",
+                type: "Column",
+                props: { span: 12 },
+                responsive: { desktop: { span: 6 } },
+                children: [
+                  {
+                    id: "text-1",
+                    type: "Text",
+                    props: { text: "Subheading", fontSize: "18px" },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
   },
   selectedId: null,
   hoveredId: null,
   expandedNodes: [],
-  viewport: "desktop",
+  activeBreakpoint: "desktop",
   selectNode: (id) =>
     set((state) => {
       if (!id) return { selectedId: null };
@@ -85,7 +109,7 @@ export const useEditorStore = create<EditorState>((set) => ({
         : [...state.expandedNodes, id]
     })),
   setPage: (page) => set({ page }),
-  setViewport: (v) => set({ viewport: v }),
+  setActiveBreakpoint: (v) => set({ activeBreakpoint: v }),
 
   addChild: (parentId, node, index = 0) =>
     set((state) => {
@@ -130,14 +154,16 @@ export const useEditorStore = create<EditorState>((set) => ({
 
   updateProps: (id, newProps) =>
     set((state) => {
-      const vp = state.viewport;
+      const bp = state.activeBreakpoint;
       const updated = deepMap(state.page, (n) => {
         if (n.id === id) {
-          const current = (n.props as any)[vp] || {};
-          return {
-            ...n,
-            props: { ...n.props, [vp]: { ...current, ...newProps } }
-          };
+          if (bp === 'mobile') {
+            return { ...n, props: { ...n.props, ...newProps } };
+          }
+          const responsive = { ...(n as any).responsive };
+          const current = responsive[bp] || {};
+          responsive[bp] = { ...current, ...newProps };
+          return { ...n, responsive } as any;
         }
         return n;
       });

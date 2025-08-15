@@ -23,16 +23,14 @@ export const widgetRegistry: Record<string, WidgetMeta> = {
     component: SectionWidget,
     name: "Section",
     defaultProps: {
-      desktop: {
-        padding: "16px",
-        backgroundColor: "#f3f4f6",
-        layout: "contained",
-      },
+      padding: "16px",
+      backgroundColor: "#f3f4f6",
+      layoutStyle: "contained",
     },
     propsSchema: {
       padding: "text",
       backgroundColor: "color",
-      layout: "text",
+      layoutStyle: "text",
     },
     isContainer: true,
     icon: "📦",
@@ -41,9 +39,7 @@ export const widgetRegistry: Record<string, WidgetMeta> = {
     component: RowWidget,
     name: "Row",
     defaultProps: {
-      desktop: {
-        gap: "0px",
-      },
+      gap: "0px",
     },
     propsSchema: {
       gap: "text",
@@ -55,12 +51,10 @@ export const widgetRegistry: Record<string, WidgetMeta> = {
     component: ColumnWidget,
     name: "Column",
     defaultProps: {
-      desktop: {
-        width: "100%",
-      },
+      span: 12,
     },
     propsSchema: {
-      width: "text",
+      span: "text",
     },
     isContainer: true,
     icon: "⬜",

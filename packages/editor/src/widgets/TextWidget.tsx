@@ -47,6 +47,8 @@ export default function TextWidget({
         fontFamily,
         lineHeight
       }}
+      data-node-id={id}
+      data-node-type="Text"
     />
   );
 }

@@ -2,28 +2,41 @@
 import * as React from "react";
 
 interface SectionWidgetProps {
-  id?: string;
+  id: string;
   children?: React.ReactNode;
   padding?: string;
   backgroundColor?: string;
-  layout?: string;
+  layoutStyle?: string;
 }
 
 export default function SectionWidget({
+  id,
   children,
   padding,
   backgroundColor,
-  layout
+  layoutStyle = "contained",
 }: SectionWidgetProps) {
-  const content =
-    layout === "contained" ? (
-      <div className="max-w-[1200px] mx-auto">{children}</div>
-    ) : (
-      children
-    );
+  const innerStyle: React.CSSProperties = { padding };
+  const sectionStyle: React.CSSProperties = { background: backgroundColor };
+
+  const inner = (
+    <div
+      className="section__inner"
+      style={{ ...innerStyle, maxWidth: layoutStyle === "contained" ? "1200px" : "none", margin: "0 auto" }}
+    >
+      {children}
+    </div>
+  );
+
   return (
-    <section className="border min-h-[48px]" style={{ padding, backgroundColor }}>
-      {content}
+    <section
+      data-node-id={id}
+      data-node-type="Section"
+      data-layout={layoutStyle}
+      className="min-h-[48px] border"
+      style={sectionStyle}
+    >
+      {inner}
     </section>
   );
 }
