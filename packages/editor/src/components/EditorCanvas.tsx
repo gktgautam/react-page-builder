@@ -1,5 +1,5 @@
 "use client";
-import { useEditorStore } from "../lib/store";
+import { useEditorStore, type Breakpoint } from "../lib/store";
 import { widgetRegistry } from "../lib/widgetRegistry";
 import type { TPageNode } from "@schema/core";
 
@@ -45,9 +45,33 @@ function RenderNode({ node }: { node: TPageNode }) {
 
 export function EditorCanvas() {
   const page = useEditorStore((s) => s.page);
+  const activeBreakpoint = useEditorStore((s) => s.activeBreakpoint);
+  const setActiveBreakpoint = useEditorStore((s) => s.setActiveBreakpoint);
+
+  const widths: Record<Breakpoint, string> = {
+    desktop: "max-w-full",
+    tablet: "max-w-3xl",
+    mobile: "max-w-sm"
+  };
+
   return (
     <main className="flex-1 overflow-auto bg-gray-50 p-6">
-      <div className="bg-white border rounded p-6 min-h-[70vh]">
+      <div className="mb-4 space-x-2">
+        {(["desktop", "tablet", "mobile"] as Breakpoint[]).map((bp) => (
+          <button
+            key={bp}
+            className={`px-2 py-1 border rounded ${
+              activeBreakpoint === bp ? "bg-gray-200" : ""
+            }`}
+            onClick={() => setActiveBreakpoint(bp)}
+          >
+            {bp}
+          </button>
+        ))}
+      </div>
+      <div
+        className={`bg-white border rounded p-6 min-h-[70vh] mx-auto ${widths[activeBreakpoint]}`}
+      >
         <RenderNode node={page} />
       </div>
     </main>

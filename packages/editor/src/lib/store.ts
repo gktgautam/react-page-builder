@@ -1,18 +1,25 @@
 "use client";
 import { create } from "zustand";
-import type { TPageNode } from "@schema/core";
+export interface PageNode {
+  id: string;
+  type: string;
+  props: Record<string, unknown>;
+  children?: PageNode[];
+}
 
-export interface PageNode extends TPageNode {}
+export type Breakpoint = "desktop" | "tablet" | "mobile";
 
 interface EditorState {
   page: PageNode;
   selectedId: string | null;
   hoveredId: string | null;
   expandedNodes: string[];
+  activeBreakpoint: Breakpoint;
   selectNode: (id: string | null) => void;
   hoverNode: (id: string | null) => void;
   toggleExpand: (id: string) => void;
   setPage: (page: PageNode) => void;
+  setActiveBreakpoint: (bp: Breakpoint) => void;
   addChild: (parentId: string, node: PageNode, index?: number) => void;
   moveNode: (id: string, newParentId: string, index: number) => void;
   updateProps: (id: string, newProps: Record<string, unknown>) => void;
@@ -43,8 +50,9 @@ export const useEditorStore = create<EditorState>((set) => ({
   selectedId: null,
   hoveredId: null,
   expandedNodes: [],
-  selectNode: (id) =>
-    set((state) => {
+  activeBreakpoint: "desktop",
+  selectNode: (id: string | null) =>
+    set((state: EditorState) => {
       if (!id) return { selectedId: null };
       const ancestors =
         findAncestorIds(state.page, id)?.filter((n) => n !== state.page.id) || [];
@@ -53,17 +61,18 @@ export const useEditorStore = create<EditorState>((set) => ({
       );
       return { selectedId: id, expandedNodes: expanded };
     }),
-  hoverNode: (id) => set({ hoveredId: id }),
-  toggleExpand: (id) =>
-    set((state) => ({
+  hoverNode: (id: string | null) => set({ hoveredId: id }),
+  toggleExpand: (id: string) =>
+    set((state: EditorState) => ({
       expandedNodes: state.expandedNodes.includes(id)
         ? state.expandedNodes.filter((n) => n !== id)
         : [...state.expandedNodes, id]
     })),
-  setPage: (page) => set({ page }),
+  setPage: (page: PageNode) => set({ page }),
+  setActiveBreakpoint: (bp: Breakpoint) => set({ activeBreakpoint: bp }),
 
-  addChild: (parentId, node, index = 0) =>
-    set((state) => {
+  addChild: (parentId: string, node: PageNode, index = 0) =>
+    set((state: EditorState) => {
       const insert = (n: PageNode): PageNode => {
         if (n.id === parentId) {
           const copy = [...(n.children || [])];
@@ -75,20 +84,20 @@ export const useEditorStore = create<EditorState>((set) => ({
       return { page: insert(state.page) };
     }),
 
-  moveNode: (id, newParentId, index) =>
-    set((state) => {
+  moveNode: (id: string, newParentId: string, index: number) =>
+    set((state: EditorState) => {
       let moving: PageNode | null = null;
 
       const removed = deepMap(state.page, (n) => {
         if (!n.children) return n;
-        const filtered = n.children.filter((c:any) => {
+        const filtered = n.children.filter((c: any) => {
           if (c.id === id) {
             moving = c as PageNode;
             return false;
           }
           return true;
         });
-        return { ...n, children: filtered.map((c:any) => c as PageNode) };
+        return { ...n, children: filtered.map((c: any) => c as PageNode) };
       });
 
       const inserted = deepMap(removed, (n) => {
@@ -103,8 +112,8 @@ export const useEditorStore = create<EditorState>((set) => ({
       return { page: inserted };
     }),
 
-  updateProps: (id, newProps) =>
-    set((state) => {
+  updateProps: (id: string, newProps: Record<string, unknown>) =>
+    set((state: EditorState) => {
       const updated = deepMap(state.page, (n) => {
         if (n.id === id) return { ...n, props: { ...n.props, ...newProps } };
         return n;
