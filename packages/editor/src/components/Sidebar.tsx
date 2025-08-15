@@ -5,6 +5,8 @@ import { useEditorStore } from "../lib/store";
 import { TemplateGallery } from "./TemplateGallery";
 import { Panel, PanelHeader } from "@ui/core";
 import { findNode } from "../lib/findNode";
+// ⬇️ NEW
+import PreviewButton from "../components/PreviewButton";
 
 export function Sidebar() {
   const addChild = useEditorStore((s) => s.addChild);
@@ -54,6 +56,7 @@ export function Sidebar() {
 function SaveLoadButtons() {
   const page = useEditorStore((s) => s.page);
   const setPage = useEditorStore((s) => s.setPage);
+
   return (
     <div className="space-x-2">
       <button
@@ -66,17 +69,24 @@ function SaveLoadButtons() {
               body: JSON.stringify(page)
             });
             if (!res.ok) throw new Error("Failed to save");
+            // Optional: read {pageId} if your API returns it
+            // const { pageId } = await res.json();
             alert("Saved!");
           } catch (err) {
-            alert(
-              "Error saving: " +
-                (err instanceof Error ? err.message : String(err))
-            );
+            alert("Error saving: " + (err instanceof Error ? err.message : String(err)));
           }
         }}
       >
         Save
       </button>
+
+      {/* ⬇️ NEW: Preview (saved-only; it will save again and open new tab) */}
+      <PreviewButton
+        className="px-3 py-1 border rounded"
+        // Always get the freshest state at click time
+        getPageJson={() => useEditorStore.getState().page}
+      />
+
       <button
         className="px-3 py-1 border rounded"
         onClick={async () => {
@@ -86,15 +96,14 @@ function SaveLoadButtons() {
             const json = await res.json();
             setPage(json);
           } catch (err) {
-            alert(
-              "Error loading: " +
-                (err instanceof Error ? err.message : String(err))
-            );
+            alert("Error loading: " + (err instanceof Error ? err.message : String(err)));
           }
         }}
       >
         Load
       </button>
+
+      {/* (Optional) Keep your existing Publish if you still want the raw HTML flow */}
       <button
         className="px-3 py-1 border rounded"
         onClick={async () => {
@@ -112,10 +121,7 @@ function SaveLoadButtons() {
               w.document.close();
             }
           } catch (err) {
-            alert(
-              "Error publishing: " +
-                (err instanceof Error ? err.message : String(err))
-            );
+            alert("Error publishing: " + (err instanceof Error ? err.message : String(err)));
           }
         }}
       >

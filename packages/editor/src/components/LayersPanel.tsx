@@ -12,6 +12,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Panel, PanelHeader, IconButton } from "@ui/core";
 
+import { makeOnDragEnd }  from "../dnd/handlers"; // ✅ already correct
+
 interface TreeNode extends Omit<PageNode, "children"> {
   children?: TreeNode[];
 }
@@ -115,18 +117,56 @@ function TreeItem({ node, depth, parentId }: {
 export function LayersPanel() {
   const page = useEditorStore((s) => s.page) as TreeNode;
   const moveNode = useEditorStore((s) => s.moveNode);
+  const addChild = useEditorStore((s) => s.addChild); // ✅ NEW: needed for creating nodes
 
   const { setNodeRef: setRootDropRef, isOver: isRootOver } = useDroppable<DndNodeData>({
     id: "drop-root",
     data: { isContainer: true, parentId: "root" }
   });
 
+  // ✅ NEW: helper to create a node from the registry (no .create() on WidgetMeta)
+  const createFromWidget = (key: string) => {
+    const meta: any = widgetRegistry[key];
+    if (!meta) throw new Error(`Unknown widget: ${key}`);
+
+    const desktop = { ...(meta.defaultProps?.desktop ?? {}) };
+    const tablet  = { ...(meta.defaultProps?.tablet  ?? {}) };
+    const mobile  = { ...(meta.defaultProps?.mobile  ?? {}) };
+
+    const id = typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `id_${Math.random().toString(36).slice(2)}`;
+
+    return {
+      id,
+      type: key,
+      props: { desktop, tablet, mobile },
+      children: meta.isContainer ? [] : [], // set undefined if your schema prefers
+    };
+  };
+
+  // ✅ NEW: canvas DropSlot handler
+  const onCanvasDragEnd = makeOnDragEnd({
+    moveNode,
+    addChild,
+    createFromWidget,
+  });
+
+  // ✅ CHANGED: delegate to canvas handler when dropping on canvas slots
   const handleDragEnd = (event: DragEndEvent<DndNodeData>) => {
     const { active, over } = event;
     if (!over) return;
 
-    const activeId = String(active.id);
     const overId = String(over.id);
+
+    // Canvas DropSlot ids look like: "drop:<parentId>:<index>"
+    if (overId.startsWith("drop:")) {
+      onCanvasDragEnd(event as any);
+      return;
+    }
+
+    // === Existing Layers behavior (panel sorting / panel container drops) ===
+    const activeId = String(active.id);
 
     const dropZone =
       overId.startsWith("drop-") && over.data.current?.isContainer;
