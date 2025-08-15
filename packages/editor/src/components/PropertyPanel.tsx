@@ -2,17 +2,7 @@
 import { useMemo, type ChangeEvent } from "react";
 import { useEditorStore } from "../lib/store";
 import { Panel, PanelHeader, InputField } from "@ui/core";
-
-// Helper to find node by id in page tree
-function findNode(node: any, id: string | null): any {
-  if (!id) return null;
-  if (node.id === id) return node;
-  for (const child of node.children || []) {
-    const found = findNode(child, id);
-    if (found) return found;
-  }
-  return null;
-}
+import { findNode } from "../lib/findNode";
 
 export function PropertyPanel() {
   const page = useEditorStore((s) => s.page);
