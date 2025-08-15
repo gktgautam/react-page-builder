@@ -1,6 +1,6 @@
 "use client";
 import { create } from "zustand";
-import type { TPageNode } from "@schema/core";
+import type { TPageNode, Breakpoint } from "@schema/core";
 
 export interface PageNode extends TPageNode {}
 
@@ -9,6 +9,7 @@ interface EditorState {
   selectedId: string | null;
   hoveredId: string | null;
   expandedNodes: string[];
+  breakpoint: Breakpoint;
   selectNode: (id: string | null) => void;
   hoverNode: (id: string | null) => void;
   toggleExpand: (id: string) => void;
@@ -16,6 +17,7 @@ interface EditorState {
   addChild: (parentId: string, node: PageNode, index?: number) => void;
   moveNode: (id: string, newParentId: string, index: number) => void;
   updateProps: (id: string, newProps: Record<string, unknown>) => void;
+  setBreakpoint: (bp: Breakpoint) => void;
 }
 
 function deepMap(node: PageNode, fn: (n: PageNode) => PageNode): PageNode {
@@ -43,6 +45,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   selectedId: null,
   hoveredId: null,
   expandedNodes: [],
+  breakpoint: "desktop",
   selectNode: (id) =>
     set((state) => {
       if (!id) return { selectedId: null };
@@ -61,6 +64,7 @@ export const useEditorStore = create<EditorState>((set) => ({
         : [...state.expandedNodes, id]
     })),
   setPage: (page) => set({ page }),
+  setBreakpoint: (bp) => set({ breakpoint: bp }),
 
   addChild: (parentId, node, index = 0) =>
     set((state) => {
