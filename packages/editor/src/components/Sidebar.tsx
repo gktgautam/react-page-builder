@@ -5,8 +5,22 @@ import { useEditorStore } from "../lib/store";
 import { TemplateGallery } from "./TemplateGallery";
 import { Panel, PanelHeader } from "@ui/core";
 
+// Helper to find node by id in page tree
+function findNode(node: any, id: string | null): any {
+  if (!id) return null;
+  if (node.id === id) return node;
+  for (const child of node.children || []) {
+    const found = findNode(child, id);
+    if (found) return found;
+  }
+  return null;
+}
+
 export function Sidebar() {
   const addChild = useEditorStore((s) => s.addChild);
+  const selectedId = useEditorStore((s) => s.selectedId);
+  const page = useEditorStore((s) => s.page);
+
   return (
     <Panel side="left" className="p-3 space-y-3">
       <div>
@@ -16,14 +30,23 @@ export function Sidebar() {
             <button
               key={type}
               className="w-full text-left px-2 py-1 border rounded hover:bg-gray-100"
-              onClick={() =>
-                addChild("root", {
-                  id: nanoid(),
-                  type,
-                  props: meta.defaultProps,
-                  children: meta.isContainer ? [] : undefined
-                } as any, 0)
-              }
+              onClick={() => {
+                const selectedNode = findNode(page, selectedId);
+                const container =
+                  selectedNode && widgetRegistry[selectedNode.type]?.isContainer
+                    ? selectedNode
+                    : page; // root
+                addChild(
+                  container.id,
+                  {
+                    id: nanoid(),
+                    type,
+                    props: meta.defaultProps,
+                    children: meta.isContainer ? [] : undefined
+                  } as any,
+                  (container.children?.length || 0)
+                );
+              }}
             >
               {meta.icon} {meta.name}
             </button>
