@@ -4,7 +4,6 @@ import HeadingWidget from "../widgets/HeadingWidget";
 import TextWidget from "../widgets/TextWidget";
 import ButtonWidget from "../widgets/ButtonWidget";
 import SectionWidget from "../widgets/SectionWidget";
-import ColumnWidget from "../widgets/ColumnWidget";
 
 export type WidgetPropInputType = "text" | "color";
 
@@ -24,23 +23,13 @@ export const widgetRegistry: Record<string, WidgetMeta> = {
     defaultProps: {
       padding: "16px",
       backgroundColor: "#f3f4f6",
-      layout: "fullWidth",
     },
     propsSchema: {
       padding: "text",
       backgroundColor: "color",
-      layout: "text",
     },
     isContainer: true,
     icon: "📦",
-  },
-  Column: {
-    component: ColumnWidget,
-    name: "Column",
-    defaultProps: {},
-    propsSchema: {},
-    isContainer: true,
-    icon: "📋",
   },
   Heading: {
     component: HeadingWidget,

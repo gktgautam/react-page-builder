@@ -16,30 +16,11 @@ export function TemplateGallery() {
           {
             id: nanoid(),
             type: "Section",
-            props: { layout: "fullWidth" },
+            props: {},
             children: [
-              {
-                id: nanoid(),
-                type: "Column",
-                props: {},
-                children: [
-                  {
-                    id: nanoid(),
-                    type: "Heading",
-                    props: { text: "Welcome to My Site" }
-                  },
-                  {
-                    id: nanoid(),
-                    type: "Text",
-                    props: { text: "Build pages visually." }
-                  },
-                  {
-                    id: nanoid(),
-                    type: "Button",
-                    props: { label: "Get Started", href: "#" }
-                  }
-                ]
-              }
+              { id: nanoid(), type: "Heading", props: { text: "Welcome to My Site" } },
+              { id: nanoid(), type: "Text", props: { text: "Build pages visually." } },
+              { id: nanoid(), type: "Button", props: { label: "Get Started", href: "#" } }
             ]
           }
         ]
@@ -52,21 +33,9 @@ export function TemplateGallery() {
         type: "Page",
         props: {},
         children: [
-          {
-            id: nanoid(),
-            type: "Section",
-            props: { layout: "fullWidth" },
-            children: [
-              {
-                id: nanoid(),
-                type: "Column",
-                props: {},
-                children: [
-                  { id: nanoid(), type: "Text", props: { text: "Hello world" } }
-                ]
-              }
-            ]
-          }
+          { id: nanoid(), type: "Section", props: {}, children: [
+            { id: nanoid(), type: "Text", props: { text: "Hello world" } }
+          ]}
         ]
       }
     }
