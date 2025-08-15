@@ -10,6 +10,7 @@
     "baseUrl": ".",
     "paths": {
       "@editor/*": ["packages/editor/src/*"],
+      "@schema/core": ["packages/schema/src/index.ts"],
       "@schema/*": ["packages/schema/src/*"],
       "@utils/*": ["packages/utils/src/*"],
       "@ui/core": ["packages/ui/src/index.ts"]
