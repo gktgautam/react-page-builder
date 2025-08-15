@@ -1,6 +1,7 @@
 "use client";
 import type React from "react";
 import { useEditorStore } from "../lib/store";
+import type { PageNode } from "../lib/store";
 import { widgetRegistry } from "../lib/widgetRegistry";
 import {
   DndContext, closestCenter, DragEndEvent, useDroppable
@@ -11,8 +12,19 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Panel, PanelHeader, IconButton } from "@ui/core";
 
-function TreeItem({ node, depth, parentId }:{
-  node: any; depth: number; parentId: string;
+interface TreeNode extends Omit<PageNode, "children"> {
+  children?: TreeNode[];
+}
+
+interface DndNodeData {
+  parentId: string;
+  isContainer?: boolean;
+}
+
+function TreeItem({ node, depth, parentId }: {
+  node: TreeNode;
+  depth: number;
+  parentId: string;
 }) {
   const { isContainer, icon, name } = widgetRegistry[node.type] || {};
   const expandedNodes = useEditorStore((s) => s.expandedNodes);
@@ -23,9 +35,9 @@ function TreeItem({ node, depth, parentId }:{
   const selectedId = useEditorStore((s) => s.selectedId);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: node.id, data: { parentId } });
+    useSortable<DndNodeData>({ id: node.id, data: { parentId } });
 
-  const { setNodeRef: setDropRef, isOver } = useDroppable({
+  const { setNodeRef: setDropRef, isOver } = useDroppable<DndNodeData>({
     id: `drop-${node.id}`,
     data: { isContainer, parentId: node.id },
     disabled: !isContainer
@@ -83,11 +95,16 @@ function TreeItem({ node, depth, parentId }:{
 
       {isContainer && isExpanded && (
         <SortableContext
-          items={(node.children || []).map((c: any) => c.id)}
+          items={(node.children || []).map((c) => c.id)}
           strategy={verticalListSortingStrategy}
         >
-          {node.children?.map((child: any) => (
-            <TreeItem key={child.id} node={child} depth={depth + 1} parentId={node.id} />
+          {node.children?.map((child) => (
+            <TreeItem
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              parentId={node.id}
+            />
           ))}
         </SortableContext>
       )}
@@ -96,22 +113,23 @@ function TreeItem({ node, depth, parentId }:{
 }
 
 export function LayersPanel() {
-  const page = useEditorStore((s) => s.page);
+  const page = useEditorStore((s) => s.page) as TreeNode;
   const moveNode = useEditorStore((s) => s.moveNode);
 
-  const { setNodeRef: setRootDropRef, isOver: isRootOver } = useDroppable({
+  const { setNodeRef: setRootDropRef, isOver: isRootOver } = useDroppable<DndNodeData>({
     id: "drop-root",
     data: { isContainer: true, parentId: "root" }
   });
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent<DndNodeData>) => {
     const { active, over } = event;
     if (!over) return;
 
     const activeId = String(active.id);
     const overId = String(over.id);
 
-    const dropZone = overId.startsWith("drop-") && over.data.current?.isContainer;
+    const dropZone =
+      overId.startsWith("drop-") && over.data.current?.isContainer;
 
     if (dropZone) {
       const newParentId = over.data.current?.parentId as string;
@@ -135,10 +153,10 @@ export function LayersPanel() {
           style={{ background: isRootOver ? "#eef6ff" : undefined }}
         >
           <SortableContext
-            items={(page.children || []).map((c: any) => c.id)}
+            items={(page.children || []).map((c) => c.id)}
             strategy={verticalListSortingStrategy}
           >
-            {page.children?.map((child: any) => (
+            {page.children?.map((child) => (
               <TreeItem key={child.id} node={child} depth={0} parentId="root" />
             ))}
           </SortableContext>
