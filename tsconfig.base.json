@@ -6,6 +6,7 @@
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "strict": true,
+    "types": ["react", "react-dom"],
     "baseUrl": ".",
     "paths": {
       "@editor/*": ["packages/editor/src/*"],
