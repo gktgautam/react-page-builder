@@ -1,7 +1,19 @@
 import type { TPageNode } from "@schema/core";
 import { escapeHtml } from "./escape";
 
-export function renderToHtml(node: TPageNode): string {
+type Breakpoint = "desktop" | "tablet" | "mobile";
+
+function resolveProps(raw: any, bp: Breakpoint) {
+  const base = raw?.desktop || {};
+  const override = raw?.[bp] || {};
+  const merged = { ...base, ...override } as any;
+  if (base.style || override.style) {
+    merged.style = { ...(base.style || {}), ...(override.style || {}) };
+  }
+  return merged;
+}
+
+export function renderToHtml(node: TPageNode, bp: Breakpoint = "desktop"): string {
   const map: Record<string, string> = {
     Page: "div",
     Section: "section",
@@ -12,12 +24,20 @@ export function renderToHtml(node: TPageNode): string {
     Button: "a",
   };
   const tag = map[node.type] ?? "div";
-  const props = (node.props as any) || {};
+  const props = resolveProps((node.props as any) || {}, bp);
   const attrs = Object.entries(props)
     .filter(([k]) => !["text", "label", "children"].includes(k))
-    .map(([k, v]) => `${k}="${escapeHtml(String(v))}"`)
+    .map(([k, v]) => {
+      if (k === "style" && typeof v === "object") {
+        const styleStr = Object.entries(v)
+          .map(([sk, sv]) => `${sk}:${escapeHtml(String(sv))}`)
+          .join(";");
+        return `style="${styleStr}"`;
+      }
+      return `${k}="${escapeHtml(String(v))}"`;
+    })
     .join(" ");
-  const children = (node.children?.map(renderToHtml).join("") ?? "");
+  const children = (node.children?.map((c) => renderToHtml(c, bp)).join("") ?? "");
   const text = (props as any)?.text ?? (props as any)?.label ?? "";
-  return `<${tag}${attrs ? " " + attrs : ""}>${children || escapeHtml(text)}</${tag}>`;
+  return `<${tag}${attrs ? " " + attrs : ""}>${children || escapeHtml(String(text))}</${tag}>`;
 }
