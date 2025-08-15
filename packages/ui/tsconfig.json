@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "dist",
     "declaration": true,
-    "strict": false
+    "strict": false,
+    "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": ["src/**/*"]
 }

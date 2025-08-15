@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo, type ChangeEvent } from "react";
 import { useEditorStore } from "../lib/store";
 import { Panel, PanelHeader, InputField } from "@ui/core";
 
@@ -47,7 +47,9 @@ export function PropertyPanel() {
           <InputField
             id={`prop-${key}`}
             value={(props as any)[key] ?? ""}
-            onChange={(e) => updateProps(selectedNode.id, { [key]: e.target.value })}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              updateProps(selectedNode.id, { [key]: e.target.value })
+            }
           />
         </div>
       ))}
