@@ -2,6 +2,8 @@
 
 React Page Builder is a monorepo for building a modular page builder in React. It contains reusable packages for the editor, schema, UI components and utilities, along with a Next.js web application for running the builder.
 
+Tailwind CSS is included only for styling the editor interface during development; generated pages do not rely on it.
+
 ## Workspace Layout
 
 - `packages/` – shared libraries used by the project:

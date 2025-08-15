@@ -2,11 +2,9 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Welcome</h1>
-      <Link href="/editor" className="text-blue-600 underline">
-        Open Editor
-      </Link>
+    <main style={{ padding: "2rem" }}>
+      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1rem" }}>Welcome</h1>
+      <Link href="/editor">Open Editor</Link>
     </main>
   );
 }
