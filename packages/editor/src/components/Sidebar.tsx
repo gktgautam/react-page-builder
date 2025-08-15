@@ -4,17 +4,7 @@ import { widgetRegistry } from "../lib/widgetRegistry";
 import { useEditorStore } from "../lib/store";
 import { TemplateGallery } from "./TemplateGallery";
 import { Panel, PanelHeader } from "@ui/core";
-
-// Helper to find node by id in page tree
-function findNode(node: any, id: string | null): any {
-  if (!id) return null;
-  if (node.id === id) return node;
-  for (const child of node.children || []) {
-    const found = findNode(child, id);
-    if (found) return found;
-  }
-  return null;
-}
+import { findNode } from "../lib/findNode";
 
 export function Sidebar() {
   const addChild = useEditorStore((s) => s.addChild);
