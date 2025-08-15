@@ -1,5 +1,4 @@
-// apps/web/app/layout.tsx
-import "./globals.css"; // ⬅️ add this line
+import "./globals.css";
 
 export const metadata = { title: "Page Builder", description: "Schema-driven builder" };
 
