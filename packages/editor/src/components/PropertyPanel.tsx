@@ -1,6 +1,7 @@
 "use client";
 import { useMemo } from "react";
 import { useEditorStore } from "../lib/store";
+import { Panel, PanelHeader, InputField } from "@ui/core";
 
 // Helper to find node by id in page tree
 function findNode(node: any, id: string | null): any {
@@ -22,10 +23,10 @@ export function PropertyPanel() {
 
   if (!selectedNode) {
     return (
-      <aside className="w-64 bg-white border-l p-3 overflow-auto">
-        <h3 className="font-bold mb-2">Properties</h3>
+      <Panel side="right" className="p-3 overflow-auto">
+        <PanelHeader className="mb-2">Properties</PanelHeader>
         <p className="text-sm text-gray-500">Select a node to edit its props.</p>
-      </aside>
+      </Panel>
     );
   }
 
@@ -33,8 +34,8 @@ export function PropertyPanel() {
   const keys = Object.keys(props);
 
   return (
-    <aside className="w-64 bg-white border-l p-3 overflow-auto">
-      <h3 className="font-bold mb-2">Properties</h3>
+    <Panel side="right" className="p-3 overflow-auto">
+      <PanelHeader className="mb-2">Properties</PanelHeader>
       {keys.length === 0 && (
         <p className="text-sm text-gray-500">No props available.</p>
       )}
@@ -43,14 +44,13 @@ export function PropertyPanel() {
           <label className="block text-sm font-medium mb-1" htmlFor={`prop-${key}`}>
             {key}
           </label>
-          <input
+          <InputField
             id={`prop-${key}`}
-            className="w-full border rounded px-2 py-1 text-sm"
             value={(props as any)[key] ?? ""}
             onChange={(e) => updateProps(selectedNode.id, { [key]: e.target.value })}
           />
         </div>
       ))}
-    </aside>
+    </Panel>
   );
 }
