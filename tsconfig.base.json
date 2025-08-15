@@ -11,7 +11,7 @@
       "@editor/*": ["packages/editor/src/*"],
       "@schema/*": ["packages/schema/src/*"],
       "@utils/*": ["packages/utils/src/*"],
-      "@ui/*": ["packages/ui/src/*"]
+      "@ui/core": ["packages/ui/src/index.ts"]
     }
   }
 }
