@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+/** Supported responsive breakpoints */
+export type Breakpoint = "desktop" | "tablet" | "mobile";
+
+/** Visual layout styles for a section */
+export type SectionStyle = "grid" | "fullWidth";
+
 export const PageNode = z.lazy((): z.ZodTypeAny =>
   z.object({
     id: z.string(),

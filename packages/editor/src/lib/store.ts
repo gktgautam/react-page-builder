@@ -16,6 +16,7 @@ interface EditorState {
   addChild: (parentId: string, node: PageNode, index?: number) => void;
   moveNode: (id: string, newParentId: string, index: number) => void;
   updateProps: (id: string, newProps: Record<string, unknown>) => void;
+  addWidgetToColumn: (columnId: string, widget: PageNode, index?: number) => void;
 }
 
 function deepMap(node: PageNode, fn: (n: PageNode) => PageNode): PageNode {
@@ -38,7 +39,14 @@ export const useEditorStore = create<EditorState>((set) => ({
     id: "root",
     type: "Page",
     props: {},
-    children: [{ id: "section-1", type: "Section", props: {}, children: [] }]
+    children: [
+      {
+        id: "section-1",
+        type: "Section",
+        props: { layout: "fullWidth" },
+        children: [{ id: "column-1", type: "Column", props: {}, children: [] }]
+      }
+    ]
   },
   selectedId: null,
   hoveredId: null,
@@ -110,5 +118,18 @@ export const useEditorStore = create<EditorState>((set) => ({
         return n;
       });
       return { page: updated };
+    }),
+
+  addWidgetToColumn: (columnId, widget, index = 0) =>
+    set((state) => {
+      const insert = (n: PageNode): PageNode => {
+        if (n.id === columnId) {
+          const copy = [...(n.children || [])];
+          copy.splice(index, 0, widget);
+          return { ...n, children: copy };
+        }
+        return { ...n, children: n.children?.map(insert) || [] };
+      };
+      return { page: insert(state.page) };
     })
 }));
