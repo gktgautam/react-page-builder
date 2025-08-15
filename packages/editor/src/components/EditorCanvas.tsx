@@ -1,7 +1,7 @@
 "use client";
 import { useEditorStore } from "../lib/store";
 import { widgetRegistry } from "../lib/widgetRegistry";
-import type { TPageNode, Breakpoint } from "@schema/core";
+import type { TPageNode } from "@schema/core";
 
 function RenderNode({ node }: { node: TPageNode }) {
   const hoveredId = useEditorStore((s) => s.hoveredId);
@@ -45,12 +45,8 @@ function RenderNode({ node }: { node: TPageNode }) {
 
 export function EditorCanvas() {
   const page = useEditorStore((s) => s.page);
-  const breakpoint: Breakpoint = useEditorStore((s) => s.breakpoint);
   return (
-    <main
-      className="flex-1 overflow-auto bg-gray-50 p-6"
-      data-breakpoint={breakpoint}
-    >
+    <main className="flex-1 overflow-auto bg-gray-50 p-6">
       <div className="bg-white border rounded p-6 min-h-[70vh]">
         <RenderNode node={page} />
       </div>

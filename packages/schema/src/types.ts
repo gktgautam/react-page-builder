@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-export type Breakpoint = "desktop" | "tablet" | "mobile";
-
 export const PageNode = z.lazy((): z.ZodTypeAny =>
   z.object({
     id: z.string(),
