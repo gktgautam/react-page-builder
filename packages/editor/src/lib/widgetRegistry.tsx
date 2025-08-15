@@ -1,4 +1,5 @@
 "use client";
+import type React from "react";
 import HeadingWidget from "../widgets/HeadingWidget";
 import TextWidget from "../widgets/TextWidget";
 import ButtonWidget from "../widgets/ButtonWidget";
