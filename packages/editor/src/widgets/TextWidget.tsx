@@ -1,6 +1,7 @@
 "use client";
 import ContentEditable from "react-contenteditable";
 import { useEditorStore } from "../lib/store";
+import DOMPurify from "dompurify";
 
 interface TextWidgetProps {
   id: string;
@@ -31,7 +32,9 @@ export default function TextWidget({
   return (
     <ContentEditable
       html={text}
-      onChange={(e: any) => updateProps(id, { text: e.currentTarget.innerHTML })}
+      onChange={(e: any) =>
+        updateProps(id, { text: DOMPurify.sanitize(e.currentTarget.innerHTML) })
+      }
       tagName="p"
       className="outline-none"
       style={{
