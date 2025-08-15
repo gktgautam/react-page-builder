@@ -5,10 +5,13 @@ import TextWidget from "../widgets/TextWidget";
 import ButtonWidget from "../widgets/ButtonWidget";
 import SectionWidget from "../widgets/SectionWidget";
 
+export type WidgetPropInputType = "text" | "color";
+
 export type WidgetMeta = {
   component: React.ComponentType<any>;
   name: string;
   defaultProps: Record<string, unknown>;
+  propsSchema: Record<string, WidgetPropInputType>;
   isContainer: boolean;
   icon: string;
 };
@@ -20,6 +23,10 @@ export const widgetRegistry: Record<string, WidgetMeta> = {
     defaultProps: {
       padding: "16px",
       backgroundColor: "#f3f4f6",
+    },
+    propsSchema: {
+      padding: "text",
+      backgroundColor: "color",
     },
     isContainer: true,
     icon: "📦",
@@ -38,6 +45,17 @@ export const widgetRegistry: Record<string, WidgetMeta> = {
       fontFamily: "Inter, sans-serif",
       lineHeight: "1.2em",
     },
+    propsSchema: {
+      text: "text",
+      padding: "text",
+      color: "color",
+      fontSize: "text",
+      backgroundColor: "color",
+      textAlign: "text",
+      fontWeight: "text",
+      fontFamily: "text",
+      lineHeight: "text",
+    },
     isContainer: false,
     icon: "🔠",
   },
@@ -55,6 +73,17 @@ export const widgetRegistry: Record<string, WidgetMeta> = {
       fontFamily: "Inter, sans-serif",
       lineHeight: "1.5em",
     },
+    propsSchema: {
+      text: "text",
+      padding: "text",
+      color: "color",
+      fontSize: "text",
+      backgroundColor: "color",
+      textAlign: "text",
+      fontWeight: "text",
+      fontFamily: "text",
+      lineHeight: "text",
+    },
     isContainer: false,
     icon: "✏️",
   },
@@ -71,6 +100,17 @@ export const widgetRegistry: Record<string, WidgetMeta> = {
       borderRadius: "8px",
       fontWeight: "700",
       fontFamily: "Inter, sans-serif",
+    },
+    propsSchema: {
+      label: "text",
+      href: "text",
+      padding: "text",
+      color: "color",
+      fontSize: "text",
+      backgroundColor: "color",
+      borderRadius: "text",
+      fontWeight: "text",
+      fontFamily: "text",
     },
     isContainer: false,
     icon: "🔘",
