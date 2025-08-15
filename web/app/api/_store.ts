@@ -26,3 +26,7 @@ export function savePage(tenant: string, page: Page): string {
 export function getPage(tenant: string, id: string): Page | undefined {
   return tenantMap(tenant).get(id);
 }
+
+export function listPages(tenant: string): Page[] {
+  return Array.from(tenantMap(tenant).values());
+}
