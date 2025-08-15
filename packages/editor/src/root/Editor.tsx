@@ -1,5 +1,5 @@
 "use client";
-import { Sidebar } from "../components/Sidebar";
+import { Sidebar } from "./Sidebar";
 import { EditorCanvas } from "../components/EditorCanvas";
 import { LayersPanel } from "../components/LayersPanel";
 import { PropertyPanel } from "../components/PropertyPanel";
