@@ -17,29 +17,62 @@ export const widgetRegistry: Record<string, WidgetMeta> = {
   Section: {
     component: SectionWidget,
     name: "Section",
-    defaultProps: {},
+    defaultProps: {
+      padding: "16px",
+      backgroundColor: "#f3f4f6",
+    },
     isContainer: true,
-    icon: "📦"
+    icon: "📦",
   },
   Heading: {
     component: HeadingWidget,
     name: "Heading",
-    defaultProps: { text: "Heading Text" },
+    defaultProps: {
+      text: "Heading Text",
+      padding: "8px 0",
+      color: "#333333",
+      fontSize: "32px",
+      backgroundColor: "transparent",
+      textAlign: "left",
+      fontWeight: "700",
+      fontFamily: "Inter, sans-serif",
+      lineHeight: "1.2em",
+    },
     isContainer: false,
-    icon: "🔠"
+    icon: "🔠",
   },
   Text: {
     component: TextWidget,
     name: "Text",
-    defaultProps: { text: "Edit me" },
+    defaultProps: {
+      text: "Edit me",
+      padding: "8px",
+      color: "#333333",
+      fontSize: "16px",
+      backgroundColor: "transparent",
+      textAlign: "left",
+      fontWeight: "400",
+      fontFamily: "Inter, sans-serif",
+      lineHeight: "1.5em",
+    },
     isContainer: false,
-    icon: "✏️"
+    icon: "✏️",
   },
   Button: {
     component: ButtonWidget,
     name: "Button",
-    defaultProps: { label: "Click Me", href: "#" },
+    defaultProps: {
+      label: "Click Me",
+      href: "#",
+      padding: "12px 24px",
+      color: "#ffffff",
+      fontSize: "16px",
+      backgroundColor: "#3b82f6",
+      borderRadius: "8px",
+      fontWeight: "700",
+      fontFamily: "Inter, sans-serif",
+    },
     isContainer: false,
-    icon: "🔘"
-  }
+    icon: "🔘",
+  },
 };

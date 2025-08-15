@@ -29,20 +29,24 @@ export function PropertyPanel() {
       {keys.length === 0 && (
         <p className="text-sm text-gray-500">No props available.</p>
       )}
-      {keys.map((key) => (
-        <div key={key} className="mb-2">
-          <label className="block text-sm font-medium mb-1" htmlFor={`prop-${key}`}>
-            {key}
-          </label>
-          <InputField
-            id={`prop-${key}`}
-            value={(props as any)[key] ?? ""}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              updateProps(selectedNode.id, { [key]: e.target.value })
-            }
-          />
-        </div>
-      ))}
+      {keys.map((key) => {
+        const type = key.toLowerCase().includes("color") ? "color" : "text";
+        return (
+          <div key={key} className="mb-2">
+            <label className="block text-sm font-medium mb-1" htmlFor={`prop-${key}`}>
+              {key}
+            </label>
+            <InputField
+              id={`prop-${key}`}
+              type={type}
+              value={(props as any)[key] ?? ""}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                updateProps(selectedNode.id, { [key]: e.target.value })
+              }
+            />
+          </div>
+        );
+      })}
     </Panel>
   );
 }

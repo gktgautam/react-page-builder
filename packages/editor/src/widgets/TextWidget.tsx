@@ -2,15 +2,48 @@
 import ContentEditable from "react-contenteditable";
 import { useEditorStore } from "../lib/store";
 
-interface TextWidgetProps { id: string; text: string; }
-export default function TextWidget({ id, text }: TextWidgetProps) {
-  const updateProps = useEditorStore((s) => s.updateProps);
+interface TextWidgetProps {
+  id: string;
+  text: string;
+  padding?: string;
+  color?: string;
+  fontSize?: string;
+  backgroundColor?: string;
+  textAlign?: string;
+  fontWeight?: string;
+  fontFamily?: string;
+  lineHeight?: string;
+}
+
+export default function TextWidget({
+  id,
+  text,
+  padding,
+  color,
+  fontSize,
+  backgroundColor,
+  textAlign,
+  fontWeight,
+  fontFamily,
+  lineHeight
+}: TextWidgetProps) {
+  const updateProps = useEditorStore((state: any) => state.updateProps);
   return (
     <ContentEditable
       html={text}
-      onChange={(e) => updateProps(id, { text: e.currentTarget.innerHTML })}
+      onChange={(e: any) => updateProps(id, { text: e.currentTarget.innerHTML })}
       tagName="p"
-      className="text-base"
+      className="outline-none"
+      style={{
+        padding,
+        color,
+        fontSize,
+        backgroundColor,
+        textAlign,
+        fontWeight,
+        fontFamily,
+        lineHeight
+      }}
     />
   );
 }
