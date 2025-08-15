@@ -59,8 +59,20 @@ function SaveLoadButtons() {
       <button
         className="px-3 py-1 border rounded"
         onClick={async () => {
-          await fetch("/api/pages", { method: "POST", body: JSON.stringify(page) });
-          alert("Saved!");
+          try {
+            const res = await fetch("/api/pages", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(page)
+            });
+            if (!res.ok) throw new Error("Failed to save");
+            alert("Saved!");
+          } catch (err) {
+            alert(
+              "Error saving: " +
+                (err instanceof Error ? err.message : String(err))
+            );
+          }
         }}
       >
         Save
@@ -68,9 +80,17 @@ function SaveLoadButtons() {
       <button
         className="px-3 py-1 border rounded"
         onClick={async () => {
-          const res = await fetch("/api/pages");
-          const json = await res.json();
-          setPage(json);
+          try {
+            const res = await fetch("/api/pages");
+            if (!res.ok) throw new Error("Failed to load");
+            const json = await res.json();
+            setPage(json);
+          } catch (err) {
+            alert(
+              "Error loading: " +
+                (err instanceof Error ? err.message : String(err))
+            );
+          }
         }}
       >
         Load
@@ -78,10 +98,25 @@ function SaveLoadButtons() {
       <button
         className="px-3 py-1 border rounded"
         onClick={async () => {
-          const res = await fetch("/api/publish", { method: "POST", body: JSON.stringify(page) });
-          const html = await res.text();
-          const w = window.open("", "_blank");
-          if (w) { w.document.write(html); w.document.close(); }
+          try {
+            const res = await fetch("/api/publish", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(page)
+            });
+            if (!res.ok) throw new Error("Failed to publish");
+            const html = await res.text();
+            const w = window.open("", "_blank");
+            if (w) {
+              w.document.write(html);
+              w.document.close();
+            }
+          } catch (err) {
+            alert(
+              "Error publishing: " +
+                (err instanceof Error ? err.message : String(err))
+            );
+          }
         }}
       >
         Publish
