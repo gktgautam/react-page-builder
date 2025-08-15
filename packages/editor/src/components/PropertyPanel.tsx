@@ -9,6 +9,7 @@ export function PropertyPanel() {
   const page = useEditorStore((s) => s.page);
   const selectedId = useEditorStore((s) => s.selectedId);
   const updateProps = useEditorStore((s) => s.updateProps);
+  const viewport = useEditorStore((s) => s.viewport);
 
   const selectedNode = useMemo(() => findNode(page, selectedId), [page, selectedId]);
 
@@ -21,7 +22,8 @@ export function PropertyPanel() {
     );
   }
 
-  const props = selectedNode.props || {};
+  const props = (selectedNode.props as any)[viewport] || {};
+  const baseProps = (selectedNode.props as any).desktop || {};
   const schema = widgetRegistry[selectedNode.type]?.propsSchema || {};
   const keys = Object.keys(schema);
 
@@ -39,7 +41,7 @@ export function PropertyPanel() {
           <InputField
             id={`prop-${key}`}
             type={schema[key]}
-            value={(props as any)[key] ?? ""}
+            value={(props as any)[key] ?? (baseProps as any)[key] ?? ""}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               updateProps(selectedNode.id, { [key]: e.target.value })
             }

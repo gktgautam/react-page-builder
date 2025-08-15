@@ -9,6 +9,7 @@ interface EditorState {
   selectedId: string | null;
   hoveredId: string | null;
   expandedNodes: string[];
+  viewport: 'desktop' | 'tablet' | 'mobile';
   selectNode: (id: string | null) => void;
   hoverNode: (id: string | null) => void;
   toggleExpand: (id: string) => void;
@@ -16,6 +17,7 @@ interface EditorState {
   addChild: (parentId: string, node: PageNode, index?: number) => void;
   moveNode: (id: string, newParentId: string, index: number) => void;
   updateProps: (id: string, newProps: Record<string, unknown>) => void;
+  setViewport: (v: 'desktop' | 'tablet' | 'mobile') => void;
 }
 
 function deepMap(node: PageNode, fn: (n: PageNode) => PageNode): PageNode {
@@ -37,12 +39,34 @@ export const useEditorStore = create<EditorState>((set) => ({
   page: {
     id: "root",
     type: "Page",
-    props: {},
-    children: [{ id: "section-1", type: "Section", props: {}, children: [] }]
+    props: { desktop: {} },
+    children: [
+      {
+        id: "section-1",
+        type: "Section",
+        props: { desktop: {} },
+        children: [
+          {
+            id: "row-1",
+            type: "Row",
+            props: { desktop: {} },
+            children: [
+              {
+                id: "column-1",
+                type: "Column",
+                props: { desktop: {} },
+                children: []
+              }
+            ]
+          }
+        ]
+      }
+    ]
   },
   selectedId: null,
   hoveredId: null,
   expandedNodes: [],
+  viewport: "desktop",
   selectNode: (id) =>
     set((state) => {
       if (!id) return { selectedId: null };
@@ -61,6 +85,7 @@ export const useEditorStore = create<EditorState>((set) => ({
         : [...state.expandedNodes, id]
     })),
   setPage: (page) => set({ page }),
+  setViewport: (v) => set({ viewport: v }),
 
   addChild: (parentId, node, index = 0) =>
     set((state) => {
@@ -105,8 +130,15 @@ export const useEditorStore = create<EditorState>((set) => ({
 
   updateProps: (id, newProps) =>
     set((state) => {
+      const vp = state.viewport;
       const updated = deepMap(state.page, (n) => {
-        if (n.id === id) return { ...n, props: { ...n.props, ...newProps } };
+        if (n.id === id) {
+          const current = (n.props as any)[vp] || {};
+          return {
+            ...n,
+            props: { ...n.props, [vp]: { ...current, ...newProps } }
+          };
+        }
         return n;
       });
       return { page: updated };
