@@ -4,6 +4,8 @@ import HeadingWidget from "../widgets/HeadingWidget";
 import TextWidget from "../widgets/TextWidget";
 import ButtonWidget from "../widgets/ButtonWidget";
 import SectionWidget from "../widgets/SectionWidget";
+import RowWidget from "../widgets/RowWidget";
+import ColumnWidget from "../widgets/ColumnWidget";
 
 export type WidgetPropInputType = "text" | "color";
 
@@ -21,29 +23,63 @@ export const widgetRegistry: Record<string, WidgetMeta> = {
     component: SectionWidget,
     name: "Section",
     defaultProps: {
-      padding: "16px",
-      backgroundColor: "#f3f4f6",
+      desktop: {
+        padding: "16px",
+        backgroundColor: "#f3f4f6",
+        layout: "contained",
+      },
     },
     propsSchema: {
       padding: "text",
       backgroundColor: "color",
+      layout: "text",
     },
     isContainer: true,
     icon: "📦",
+  },
+  Row: {
+    component: RowWidget,
+    name: "Row",
+    defaultProps: {
+      desktop: {
+        gap: "0px",
+      },
+    },
+    propsSchema: {
+      gap: "text",
+    },
+    isContainer: true,
+    icon: "📏",
+  },
+  Column: {
+    component: ColumnWidget,
+    name: "Column",
+    defaultProps: {
+      desktop: {
+        width: "100%",
+      },
+    },
+    propsSchema: {
+      width: "text",
+    },
+    isContainer: true,
+    icon: "⬜",
   },
   Heading: {
     component: HeadingWidget,
     name: "Heading",
     defaultProps: {
-      text: "Heading Text",
-      padding: "8px 0",
-      color: "#333333",
-      fontSize: "32px",
-      backgroundColor: "transparent",
-      textAlign: "left",
-      fontWeight: "700",
-      fontFamily: "Inter, sans-serif",
-      lineHeight: "1.2em",
+      desktop: {
+        text: "Heading Text",
+        padding: "8px 0",
+        color: "#333333",
+        fontSize: "32px",
+        backgroundColor: "transparent",
+        textAlign: "left",
+        fontWeight: "700",
+        fontFamily: "Inter, sans-serif",
+        lineHeight: "1.2em",
+      },
     },
     propsSchema: {
       text: "text",
@@ -63,15 +99,17 @@ export const widgetRegistry: Record<string, WidgetMeta> = {
     component: TextWidget,
     name: "Text",
     defaultProps: {
-      text: "Edit me",
-      padding: "8px",
-      color: "#333333",
-      fontSize: "16px",
-      backgroundColor: "transparent",
-      textAlign: "left",
-      fontWeight: "400",
-      fontFamily: "Inter, sans-serif",
-      lineHeight: "1.5em",
+      desktop: {
+        text: "Edit me",
+        padding: "8px",
+        color: "#333333",
+        fontSize: "16px",
+        backgroundColor: "transparent",
+        textAlign: "left",
+        fontWeight: "400",
+        fontFamily: "Inter, sans-serif",
+        lineHeight: "1.5em",
+      },
     },
     propsSchema: {
       text: "text",
@@ -91,15 +129,17 @@ export const widgetRegistry: Record<string, WidgetMeta> = {
     component: ButtonWidget,
     name: "Button",
     defaultProps: {
-      label: "Click Me",
-      href: "#",
-      padding: "12px 24px",
-      color: "#ffffff",
-      fontSize: "16px",
-      backgroundColor: "#3b82f6",
-      borderRadius: "8px",
-      fontWeight: "700",
-      fontFamily: "Inter, sans-serif",
+      desktop: {
+        label: "Click Me",
+        href: "#",
+        padding: "12px 24px",
+        color: "#ffffff",
+        fontSize: "16px",
+        backgroundColor: "#3b82f6",
+        borderRadius: "8px",
+        fontWeight: "700",
+        fontFamily: "Inter, sans-serif",
+      },
     },
     propsSchema: {
       label: "text",

@@ -11,16 +11,16 @@ export function TemplateGallery() {
       json: {
         id: "root",
         type: "Page",
-        props: {},
+        props: { desktop: {} },
         children: [
           {
             id: nanoid(),
             type: "Section",
-            props: {},
+            props: { desktop: {} },
             children: [
-              { id: nanoid(), type: "Heading", props: { text: "Welcome to My Site" } },
-              { id: nanoid(), type: "Text", props: { text: "Build pages visually." } },
-              { id: nanoid(), type: "Button", props: { label: "Get Started", href: "#" } }
+              { id: nanoid(), type: "Heading", props: { desktop: { text: "Welcome to My Site" } } },
+              { id: nanoid(), type: "Text", props: { desktop: { text: "Build pages visually." } } },
+              { id: nanoid(), type: "Button", props: { desktop: { label: "Get Started", href: "#" } } }
             ]
           }
         ]
@@ -31,10 +31,10 @@ export function TemplateGallery() {
       json: {
         id: "root",
         type: "Page",
-        props: {},
+        props: { desktop: {} },
         children: [
-          { id: nanoid(), type: "Section", props: {}, children: [
-            { id: nanoid(), type: "Text", props: { text: "Hello world" } }
+          { id: nanoid(), type: "Section", props: { desktop: {} }, children: [
+            { id: nanoid(), type: "Text", props: { desktop: { text: "Hello world" } } }
           ]}
         ]
       }

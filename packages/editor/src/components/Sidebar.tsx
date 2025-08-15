@@ -31,7 +31,7 @@ export function Sidebar() {
                   {
                     id: nanoid(),
                     type,
-                    props: meta.defaultProps,
+                    props: JSON.parse(JSON.stringify(meta.defaultProps)),
                     children: meta.isContainer ? [] : undefined
                   } as any,
                   (container.children?.length || 0)
