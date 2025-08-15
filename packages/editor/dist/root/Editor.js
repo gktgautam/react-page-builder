@@ -1,6 +1,6 @@
 "use client";
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Sidebar } from "../components/Sidebar";
+import { Sidebar } from "./Sidebar";
 import { EditorCanvas } from "../components/EditorCanvas";
 import { LayersPanel } from "../components/LayersPanel";
 import { PropertyPanel } from "../components/PropertyPanel";
