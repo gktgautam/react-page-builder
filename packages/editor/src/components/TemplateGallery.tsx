@@ -9,7 +9,7 @@ export function TemplateGallery() {
     {
       name: "Hero + CTA",
       json: {
-        id: "root",
+        id: "page-root",
         type: "Page",
         props: {},
         children: [
@@ -29,7 +29,7 @@ export function TemplateGallery() {
     {
       name: "Simple Text",
       json: {
-        id: "root",
+        id: "page-root",
         type: "Page",
         props: {},
         children: [

@@ -44,6 +44,8 @@ export default function HeadingWidget({
         fontFamily,
         lineHeight
       }}
+      data-node-id={id}
+      data-node-type="Heading"
     />
   );
 }

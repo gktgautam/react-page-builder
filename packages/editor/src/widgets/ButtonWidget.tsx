@@ -45,6 +45,8 @@ export default function ButtonWidget({
         const next = prompt("Button label:", label);
         if (next !== null) updateProps(id, { label: next });
       }}
+      data-node-id={id}
+      data-node-type="Button"
     >
       {label}
     </a>

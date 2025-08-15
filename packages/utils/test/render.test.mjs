@@ -9,7 +9,11 @@ import ts from 'typescript';
 function loadTsModule(tsPath) {
   const code = readFileSync(tsPath, 'utf8');
   const { outputText } = ts.transpileModule(code, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true, importsNotUsedAsValues: 'remove' }
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      esModuleInterop: true,
+      importsNotUsedAsValues: 'remove'
+    }
   });
   const module = { exports: {} };
   const dirname = path.dirname(tsPath);
@@ -20,11 +24,17 @@ function loadTsModule(tsPath) {
     }
     return require(p);
   }
-  vm.runInNewContext(outputText, { module, exports: module.exports, require: requireTs, __dirname: dirname, __filename: tsPath });
+  vm.runInNewContext(
+    outputText,
+    { module, exports: module.exports, require: requireTs, __dirname: dirname, __filename: tsPath }
+  );
   return module.exports;
 }
 
-const renderPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src/render.ts');
+const renderPath = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../src/render.ts'
+);
 const { renderToHtml } = loadTsModule(renderPath);
 
 test('escapes text content', () => {
@@ -34,19 +44,29 @@ test('escapes text content', () => {
 });
 
 test('escapes quotes in text', () => {
-  const node = { type: 'Text', props: { text: "\"Hello\" & 'World'" } };
+  const node = {
+    type: 'Text',
+    props: { text: '"Hello" & \u0027World\u0027' }
+  };
   const html = renderToHtml(node);
   assert.equal(html, '<p>&quot;Hello&quot; &amp; &#39;World&#39;</p>');
 });
 
 test('escapes attribute values', () => {
-  const node = { type: 'Button', props: { href: 'https://example.com?a=1&b=2', label: '<Click>' } };
+  const node = {
+    type: 'Button',
+    props: { href: 'https://example.com?a=1&b=2', label: '<Click>' }
+  };
   const html = renderToHtml(node);
   assert.equal(html, '<a href="https://example.com?a=1&amp;b=2">&lt;Click&gt;</a>');
 });
 
 test('escapes quotes in attributes', () => {
-  const node = { type: 'Button', props: { title: "\"Hello\" and 'World'", label: 'btn' } };
+  const node = {
+    type: 'Button',
+    props: { title: '"Hello" and \u0027World\u0027', label: 'btn' }
+  };
   const html = renderToHtml(node);
   assert.equal(html, '<a title="&quot;Hello&quot; and &#39;World&#39;">btn</a>');
 });
+
