@@ -1,4 +1,5 @@
 "use client";
+import type React from "react";
 import { useEditorStore } from "../lib/store";
 import { widgetRegistry } from "../lib/widgetRegistry";
 import {
@@ -58,11 +59,17 @@ function TreeItem({ node, depth, parentId }:{
         style={style}
         onMouseEnter={() => hoverNode(node.id)}
         onMouseLeave={() => hoverNode(null)}
-        onClick={(e) => { e.stopPropagation(); selectNode(node.id); }}
+        onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+          e.stopPropagation();
+          selectNode(node.id);
+        }}
       >
         {isContainer && (
           <IconButton
-            onClick={(e) => { e.stopPropagation(); toggleExpand(node.id); }}
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+              e.stopPropagation();
+              toggleExpand(node.id);
+            }}
             className="mr-1 text-xs"
             aria-label={isExpanded ? "Collapse" : "Expand"}
             title={isExpanded ? "Collapse" : "Expand"}
