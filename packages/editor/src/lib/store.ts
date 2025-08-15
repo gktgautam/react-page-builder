@@ -22,6 +22,17 @@ function deepMap(node: PageNode, fn: (n: PageNode) => PageNode): PageNode {
   return fn({ ...node, children: node.children?.map((c:any) => deepMap(c as PageNode, fn)) });
 }
 
+function findAncestorIds(node: PageNode, targetId: string): string[] | null {
+  if (node.id === targetId) return [];
+  for (const child of node.children || []) {
+    const result = findAncestorIds(child as PageNode, targetId);
+    if (result) {
+      return [node.id, ...result];
+    }
+  }
+  return null;
+}
+
 export const useEditorStore = create<EditorState>((set) => ({
   page: {
     id: "root",
@@ -32,7 +43,16 @@ export const useEditorStore = create<EditorState>((set) => ({
   selectedId: null,
   hoveredId: null,
   expandedNodes: [],
-  selectNode: (id) => set({ selectedId: id }),
+  selectNode: (id) =>
+    set((state) => {
+      if (!id) return { selectedId: null };
+      const ancestors =
+        findAncestorIds(state.page, id)?.filter((n) => n !== state.page.id) || [];
+      const expanded = Array.from(
+        new Set([...state.expandedNodes, ...ancestors])
+      );
+      return { selectedId: id, expandedNodes: expanded };
+    }),
   hoverNode: (id) => set({ hoveredId: id }),
   toggleExpand: (id) =>
     set((state) => ({
