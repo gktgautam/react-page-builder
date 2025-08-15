@@ -1,39 +1,29 @@
-// packages/editor/src/components/PreviewButton.tsx
-// Drop this button into your toolbar. It saves first, then opens /preview/[pageId] in a new tab.
-
 "use client";
-import React, { useState } from "react";
+import React from "react";
 
-export default function PreviewButton({ getPageJson }: { getPageJson: () => any }) {
-  const [loading, setLoading] = useState(false);
+export default function PreviewButton({
+  getPageJson,
+  className,
+}: {
+  getPageJson: () => any;
+  className?: string;
+}) {
+  const [loading, setLoading] = React.useState(false);
 
   async function onPreview() {
+    setLoading(true);
     try {
-      setLoading(true);
       const page = getPageJson();
-      const res = await fetch("/api/pages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(page),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to save");
-      const pageId = data.pageId;
-      window.open(`/preview/${pageId}`, "_blank", "noopener,noreferrer");
-    } catch (e) {
-      alert((e as Error).message);
+      const key = `preview_${Date.now()}`;
+      localStorage.setItem(key, JSON.stringify(page));
+      window.open(`/preview.html?key=${encodeURIComponent(key)}`, "_blank", "noopener,noreferrer");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <button
-      onClick={onPreview}
-      disabled={loading}
-      className="px-3 py-2 rounded bg-black text-white disabled:opacity-60"
-      title="Preview (saved state only)"
-    >
+    <button className={className ?? "px-3 py-1 border rounded"} onClick={onPreview} disabled={loading}>
       {loading ? "Saving…" : "Preview"}
     </button>
   );

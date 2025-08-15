@@ -186,8 +186,7 @@ export function LayersPanel() {
 
   return (
     <Panel side="right" className="overflow-auto">
-      <PanelHeader className="p-3 border-b">Navigation</PanelHeader>
-      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <PanelHeader className="p-3 border-b">Navigation</PanelHeader> 
         <div
           ref={setRootDropRef}
           style={{ background: isRootOver ? "#eef6ff" : undefined }}
@@ -200,8 +199,7 @@ export function LayersPanel() {
               <TreeItem key={child.id} node={child} depth={0} parentId="root" />
             ))}
           </SortableContext>
-        </div>
-      </DndContext>
+        </div> 
     </Panel>
   );
 }

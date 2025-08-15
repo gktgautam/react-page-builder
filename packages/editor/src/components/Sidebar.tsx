@@ -5,8 +5,37 @@ import { useEditorStore } from "../lib/store";
 import { TemplateGallery } from "./TemplateGallery";
 import { Panel, PanelHeader } from "@ui/core";
 import { findNode } from "../lib/findNode";
-// ⬇️ NEW
 import PreviewButton from "../components/PreviewButton";
+import { useDraggable } from "@dnd-kit/core"; // ⬅️ NEW
+
+function DraggableWidgetButton({
+  type,
+  meta,
+  onClick,
+}: {
+  type: string;
+  meta: any;
+  onClick: () => void;
+}) {
+  // Make the widget draggable from the sidebar
+  const { attributes, listeners, setNodeRef } = useDraggable({
+    id: `new:${type}`,
+    data: { type: "NEW_WIDGET", widgetKey: type },
+  });
+
+  return (
+    <button
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className="w-full text-left px-2 py-1 border rounded hover:bg-gray-100"
+      onClick={onClick} // click-to-add still works
+      title="Drag onto the canvas or click to add"
+    >
+      {meta.icon} {meta.name}
+    </button>
+  );
+}
 
 export function Sidebar() {
   const addChild = useEditorStore((s) => s.addChild);
@@ -18,34 +47,41 @@ export function Sidebar() {
       <div>
         <PanelHeader className="mb-2">Widgets</PanelHeader>
         <div className="space-y-2">
-          {Object.entries(widgetRegistry).map(([type, meta]) => (
-            <button
-              key={type}
-              className="w-full text-left px-2 py-1 border rounded hover:bg-gray-100"
-              onClick={() => {
-                const selectedNode = findNode(page, selectedId);
-                const container =
-                  selectedNode && widgetRegistry[selectedNode.type]?.isContainer
-                    ? selectedNode
-                    : page; // root
-                addChild(
-                  container.id,
-                  {
-                    id: nanoid(),
-                    type,
-                    props: JSON.parse(JSON.stringify(meta.defaultProps)),
-                    children: meta.isContainer ? [] : undefined
-                  } as any,
-                  (container.children?.length || 0)
-                );
-              }}
-            >
-              {meta.icon} {meta.name}
-            </button>
-          ))}
+          {Object.entries(widgetRegistry).map(([type, meta]) => {
+            const onClick = () => {
+              const selectedNode = findNode(page, selectedId);
+              const container =
+                selectedNode && widgetRegistry[selectedNode.type]?.isContainer
+                  ? selectedNode
+                  : page; // root
+
+              addChild(
+                container.id,
+                {
+                  id: nanoid(),
+                  type,
+                  props: JSON.parse(JSON.stringify(meta.defaultProps)),
+                  // ✅ always use an array (never undefined)
+                  children: [],
+                } as any,
+                (container.children?.length || 0)
+              );
+            };
+
+            return (
+              <DraggableWidgetButton
+                key={type}
+                type={type}
+                meta={meta}
+                onClick={onClick}
+              />
+            );
+          })}
         </div>
       </div>
+
       <TemplateGallery />
+
       <div className="pt-2 border-t">
         <SaveLoadButtons />
       </div>
@@ -66,24 +102,26 @@ function SaveLoadButtons() {
             const res = await fetch("/api/pages", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(page)
+              body: JSON.stringify(page),
             });
             if (!res.ok) throw new Error("Failed to save");
-            // Optional: read {pageId} if your API returns it
-            // const { pageId } = await res.json();
+            // Optional: const { pageId } = await res.json();
             alert("Saved!");
           } catch (err) {
-            alert("Error saving: " + (err instanceof Error ? err.message : String(err)));
+            alert(
+              "Error saving: " +
+                (err instanceof Error ? err.message : String(err))
+            );
           }
         }}
       >
         Save
       </button>
 
-      {/* ⬇️ NEW: Preview (saved-only; it will save again and open new tab) */}
+      {/* Preview (saved-only; it will save again and open new tab if you wired the API version),
+          or if you used the localStorage preview.html variant, this still works. */}
       <PreviewButton
         className="px-3 py-1 border rounded"
-        // Always get the freshest state at click time
         getPageJson={() => useEditorStore.getState().page}
       />
 
@@ -96,14 +134,17 @@ function SaveLoadButtons() {
             const json = await res.json();
             setPage(json);
           } catch (err) {
-            alert("Error loading: " + (err instanceof Error ? err.message : String(err)));
+            alert(
+              "Error loading: " +
+                (err instanceof Error ? err.message : String(err))
+            );
           }
         }}
       >
         Load
       </button>
 
-      {/* (Optional) Keep your existing Publish if you still want the raw HTML flow */}
+      {/* Optional: Export HTML (your existing flow) */}
       <button
         className="px-3 py-1 border rounded"
         onClick={async () => {
@@ -111,7 +152,7 @@ function SaveLoadButtons() {
             const res = await fetch("/api/publish", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(page)
+              body: JSON.stringify(page),
             });
             if (!res.ok) throw new Error("Failed to publish");
             const html = await res.text();
@@ -121,7 +162,10 @@ function SaveLoadButtons() {
               w.document.close();
             }
           } catch (err) {
-            alert("Error publishing: " + (err instanceof Error ? err.message : String(err)));
+            alert(
+              "Error publishing: " +
+                (err instanceof Error ? err.message : String(err))
+            );
           }
         }}
       >
