@@ -99,6 +99,11 @@ export function LayersPanel() {
   const page = useEditorStore((s) => s.page);
   const moveNode = useEditorStore((s) => s.moveNode);
 
+  const { setNodeRef: setRootDropRef, isOver: isRootOver } = useDroppable({
+    id: "drop-root",
+    data: { isContainer: true, parentId: "root" }
+  });
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
@@ -110,7 +115,9 @@ export function LayersPanel() {
 
     if (dropZone) {
       const newParentId = over.data.current?.parentId as string;
-      moveNode(activeId, newParentId, 0);
+      const insertIndex =
+        overId === "drop-root" ? (page.children?.length || 0) : 0;
+      moveNode(activeId, newParentId, insertIndex);
       return;
     }
 
@@ -123,14 +130,19 @@ export function LayersPanel() {
     <Panel side="right" className="overflow-auto">
       <PanelHeader className="p-3 border-b">Navigation</PanelHeader>
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext
-          items={(page.children || []).map((c: any) => c.id)}
-          strategy={verticalListSortingStrategy}
+        <div
+          ref={setRootDropRef}
+          style={{ background: isRootOver ? "#eef6ff" : undefined }}
         >
-          {page.children?.map((child: any) => (
-            <TreeItem key={child.id} node={child} depth={0} parentId="root" />
-          ))}
-        </SortableContext>
+          <SortableContext
+            items={(page.children || []).map((c: any) => c.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {page.children?.map((child: any) => (
+              <TreeItem key={child.id} node={child} depth={0} parentId="root" />
+            ))}
+          </SortableContext>
+        </div>
       </DndContext>
     </Panel>
   );
