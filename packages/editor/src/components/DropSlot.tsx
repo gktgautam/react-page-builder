@@ -1,19 +1,21 @@
 "use client";
+import * as React from "react";
 import { useDroppable } from "@dnd-kit/core";
 
 export function DropSlot({ parentId, index }: { parentId: string; index: number }) {
-  const id = `drop:${parentId}:${index}`;
-  const { isOver, setNodeRef } = useDroppable({ id });
+  const { isOver, setNodeRef } = useDroppable({
+    id: `drop:${parentId}:${index}`,
+    data: { parentId, index },
+  });
+
   return (
     <div
       ref={setNodeRef}
-      className="my-1"
-      style={{
-        height: 10,
-        border: "1px dashed #cbd5e1",
-        opacity: 0.4,
-        background: isOver ? "#bfdbfe" : "transparent",
-      }}
+      className={`my-2 rounded border-2 border-dashed ${
+        isOver ? "border-blue-500 bg-blue-50" : "border-gray-200"
+      }`}
+      style={{ minHeight: 20 }}
+      aria-label="Drop here"
     />
   );
 }

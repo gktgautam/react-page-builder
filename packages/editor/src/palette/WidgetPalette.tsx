@@ -1,20 +1,24 @@
+// packages/editor/src/palette/WidgetPalette.tsx
 "use client";
 import * as React from "react";
 import { widgetsByCategory } from "../widgets/registry";
 import type { Node } from "@schema/core";
 import { useEditorStore } from "../store/createEditorStore";
+import { nanoid } from "nanoid";
 
 export function WidgetPalette({ parentId }: { parentId: string }) {
   const groups = widgetsByCategory();
-  const insert = useEditorStore((s) => s.insertNode);
+  const addChild = useEditorStore((s) => s.addChild);
 
   const onAdd = (def: () => Node) => {
     const n = def();
-    insert(parentId, n);
+    // ensure an id exists
+    const withId: Node = { ...n, id: n.id ?? nanoid() };
+    addChild(parentId, withId);
   };
 
   return (
-    <div style={{ padding: 12, borderRight: "1px solid #e5e7eb" }}>
+    <aside style={{ width: 260, padding: 12, borderRight: "1px solid #e5e7eb", background: "#fff" }}>
       <div style={{ fontWeight: 700, marginBottom: 8 }}>Widgets</div>
       {Object.entries(groups).map(([cat, items]) => (
         <div key={cat} style={{ marginBottom: 16 }}>
@@ -41,6 +45,6 @@ export function WidgetPalette({ parentId }: { parentId: string }) {
           </div>
         </div>
       ))}
-    </div>
+    </aside>
   );
 }

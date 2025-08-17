@@ -1,12 +1,16 @@
+// packages/editor/src/components/Sidebar.tsx
 "use client";
 import * as React from "react";
-import { Panel, PanelHeader } from "@ui/core";
+import { WidgetPalette } from "../palette/WidgetPalette";
+import { useEditorStore } from "../store/createEditorStore";
 
-export function Sidebar({ children }: React.PropsWithChildren) {
+export function Sidebar() {
+  const root = useEditorStore((s) => s.doc.tree);
+  if (!root) return <aside className="w-64 border-r p-3">Loading…</aside>;
+
   return (
-    <Panel style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <PanelHeader>Sidebar</PanelHeader>
-      <div style={{ padding: 8 }}>{children}</div>
-    </Panel>
+    <aside className="w-64 border-r">
+      <WidgetPalette parentId={root.id} />
+    </aside>
   );
 }

@@ -1,27 +1,23 @@
-"use client";
 import * as React from "react";
 
-export function Panel({ children, style }: React.PropsWithChildren<{ style?: React.CSSProperties }>) {
-  return <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", ...style }}>{children}</div>;
-}
-
-export function PanelHeader({ children, style }: React.PropsWithChildren<{ style?: React.CSSProperties }>) {
-  return <div style={{ padding: "8px 10px", borderBottom: "1px solid #e5e7eb", fontWeight: 600, ...style }}>{children}</div>;
-}
-
-export function IconButton({
-  title, onClick, children, style
-}: React.PropsWithChildren<{ title?: string; onClick?: () => void; style?: React.CSSProperties }>) {
+export function Panel({ children, className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <button
-      title={title}
-      onClick={onClick}
-      style={{
-        border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 8px",
-        background: "#fff", cursor: "pointer", ...style
-      }}
-    >
+    <div className={`border border-gray-200 rounded-md bg-white ${className ?? ""}`} {...rest}>
       {children}
-    </button>
+    </div>
+  );
+}
+export function PanelHeader({ children }: { children: React.ReactNode }) {
+  return <div className="px-3 py-2 border-b font-medium">{children}</div>;
+}
+export function IconButton(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return <button {...props} className={"p-1 rounded hover:bg-gray-100 " + (props.className ?? "")} />;
+}
+export function InputField({ label, ...input }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <label className="block space-y-1">
+      <span className="text-xs text-gray-600">{label}</span>
+      <input {...input} className={"w-full border rounded px-2 py-1 " + (input.className ?? "")}/>
+    </label>
   );
 }

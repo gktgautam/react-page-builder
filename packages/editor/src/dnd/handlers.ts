@@ -1,39 +1,43 @@
-// Minimal DnD handler shims to satisfy existing imports.
-// You can wire real @dnd-kit logic later; this keeps types happy and avoids runtime errors.
+import type { Node } from "@schema/core";
 
-import type { DragEndEvent } from "@dnd-kit/core";
-import { getAllowedChildren } from "../lib/widgetRegistry";
-import { useEditorStore } from "../store";
+type MoveNode = (srcParentId: string, srcIndex: number, dstParentId: string, dstIndex: number) => void;
+type AddChild = (parentId: string, node: Node, index?: number) => void;
+type CreateFromWidget = (widgetType: string) => Node;
+type GetPage = () => Node;
 
-/**
- * Check if a child type can be dropped into a parent type based on widget constraints.
- * If a parent has no explicit acceptsChildTypes, we allow it by default.
- */
-export function canDrop(parentType: string, childType: string): boolean {
-  const allowed = getAllowedChildren(parentType);
-  if (!allowed || allowed.length === 0) return true;
-  return allowed.includes(childType);
-}
+export function makeOnDragEnd(opts: {
+  moveNode: MoveNode;
+  addChild: AddChild;
+  createFromWidget: CreateFromWidget;
+  getPage: GetPage;
+}) {
+  const { moveNode, addChild, createFromWidget } = opts;
 
-/**
- * Factory returning a drag-end handler. Your older code imports `makeOnDragEnd`
- * from here, so we provide a safe default.
- *
- * If you already have @dnd-kit sensors and active/over data, replace the internals
- * to read `event.active.data.current` and `event.over.data.current` to perform insert/move.
- */
-export function makeOnDragEnd() {
-  const store = useEditorStore.getState();
+  return (event: any) => {
+    const { active, over } = event;
+    if (!over) return;
 
-  return function onDragEnd(_event: DragEndEvent) {
-    // No-op default: keep this silent until you wire real DnD.
-    // Example (pseudo):
-    // const { active, over } = event;
-    // if (!over) return;
-    // const childType = active?.data?.current?.type as string | undefined;
-    // const parentType = over?.data?.current?.type as string | undefined;
-    // if (childType && parentType && canDrop(parentType, childType)) {
-    //   store.insertNode(over.data.current.nodeId, createNodeFromType(childType));
-    // }
+    const payload = active?.data?.current;      // what we dragged
+    const overPayload = over?.data?.current;    // drop slot info
+    if (!payload || !overPayload) return;
+
+    // Drag existing node
+    if (payload.kind === "node") {
+      // we expect the active payload to carry its source parent + index
+      // (set this when you build the draggable for nodes)
+      const { parentId: srcParentId, index: srcIndex } = payload;
+      const { parentId: dstParentId, index: dstIndex } = overPayload;
+      if (srcParentId == null || srcIndex == null) return;
+      moveNode(srcParentId, srcIndex, dstParentId, dstIndex);
+      return;
+    }
+
+    // Drag new widget from palette
+    if (payload.kind === "widget") {
+      const node = createFromWidget(payload.widgetType);
+      const { parentId, index } = overPayload;
+      addChild(parentId, node, index);
+      return;
+    }
   };
 }
