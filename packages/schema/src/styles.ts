@@ -18,3 +18,5 @@ export type ResponsiveProps<T = Record<string, any>> = {
   tablet?: T & { style?: BaseStyle };
   mobile?: T & { style?: BaseStyle };
 };
+
+export type Breakpoint = "desktop" | "tablet" | "mobile";  // ✅ add

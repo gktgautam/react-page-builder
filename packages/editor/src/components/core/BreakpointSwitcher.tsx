@@ -1,5 +1,5 @@
 "use client";
-import { useEditorStore } from "../lib/store";
+import { useEditorStore } from "../../lib/store";
 
 export function BreakpointSwitcher() {
   const viewport = useEditorStore((s) => s.activeBreakpoint);

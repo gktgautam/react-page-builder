@@ -17,11 +17,7 @@ import { makeOnDragEnd }  from "../dnd/handlers"; // ✅ already correct
 interface TreeNode extends Omit<PageNode, "children"> {
   children?: TreeNode[];
 }
-
-interface DndNodeData {
-  parentId: string;
-  isContainer?: boolean;
-}
+ 
 
 function TreeItem({ node, depth, parentId }: {
   node: TreeNode;
@@ -37,9 +33,9 @@ function TreeItem({ node, depth, parentId }: {
   const selectedId = useEditorStore((s) => s.selectedId);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable<DndNodeData>({ id: node.id, data: { parentId } });
+    useSortable({ id: node.id, data: { parentId } });
 
-  const { setNodeRef: setDropRef, isOver } = useDroppable<DndNodeData>({
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
     id: `drop-${node.id}`,
     data: { isContainer, parentId: node.id },
     disabled: !isContainer
@@ -119,7 +115,7 @@ export function LayersPanel() {
   const moveNode = useEditorStore((s) => s.moveNode);
   const addChild = useEditorStore((s) => s.addChild); // ✅ NEW: needed for creating nodes
 
-  const { setNodeRef: setRootDropRef, isOver: isRootOver } = useDroppable<DndNodeData>({
+  const { setNodeRef: setRootDropRef, isOver: isRootOver } = useDroppable({
     id: "drop-root",
     data: { isContainer: true, parentId: "root" }
   });
@@ -153,7 +149,7 @@ export function LayersPanel() {
   });
 
   // ✅ CHANGED: delegate to canvas handler when dropping on canvas slots
-  const handleDragEnd = (event: DragEndEvent<DndNodeData>) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
 

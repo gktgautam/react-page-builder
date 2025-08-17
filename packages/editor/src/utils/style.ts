@@ -1,25 +1,25 @@
 // packages/editor/src/utils/style.ts
-// Merge desktop + current breakpoint styles into a single inline style.
+import { 
+BaseStyle, 
+Breakpoint, 
+ResponsiveProps, 
+} from "@schema/core";
 
-import { BaseStyle } from "@schema/styles";
-
-export type Breakpoint = "desktop" | "tablet" | "mobile";
-
-export function styleFrom(props: any, active: Breakpoint): BaseStyle {
-  const base = props?.desktop?.style || {};
-  const bp = props?.[active]?.style || {};
-  return { ...base, ...bp };
+export function styleFrom(props: ResponsiveProps<any> | undefined, active: Breakpoint): BaseStyle {
+  const desk = props?.desktop?.style || {};
+  const cur  = props?.[active as keyof ResponsiveProps<any> as "desktop"]?.style || {};
+  return { ...desk, ...cur };
 }
 
-// Helper to read a prop value with desktop fallback.
-export function propFrom<T = any>(props: any, key: string, active: Breakpoint): T | undefined {
-  const bpVal = props?.[active]?.[key];
-  if (bpVal !== undefined) return bpVal;
-  return props?.desktop?.[key];
+// read a logical prop (text, href, src, etc) with desktop fallback
+export function propFrom<T = any>(props: ResponsiveProps<any> | undefined, key: string, active: Breakpoint): T | undefined {
+  const cur = props?.[active]?.[key];
+  if (cur !== undefined) return cur as T;
+  return props?.desktop?.[key] as T | undefined;
 }
 
-// Tiny util to stringify inline styles for SSR/HTML output.
-export function inlineStyle(style: Record<string, string | number | undefined> = {}): string {
+// convert inline style object to style string (for SSR/preview)
+export function inlineStyle(style: Record<string, string | number | undefined> = {}) {
   return Object.entries(style)
     .filter(([,v]) => v !== undefined && v !== "")
     .map(([k,v]) => `${k}:${v}`)

@@ -7,7 +7,7 @@ import { widgetRegistry } from "../lib/widgetRegistry";
 import { resolveProps } from "../lib/resolveProps";
 
 // ✅ already correct
-import StyleEditor from "../components/StyleEditor";
+import StyleEditor from "./core/StyleEditor";
 
 export function PropertyPanel() {
   const page = useEditorStore((s) => s.page);

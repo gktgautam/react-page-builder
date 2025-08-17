@@ -1,6 +1,6 @@
-import type { TPageNode } from "@schema/core";
+import type { TPageNode, Breakpoint } from "@schema/core";
 
-export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
+ 
 
 export function resolveProps(node: TPageNode, bp: Breakpoint) {
   const base = node.props || {};

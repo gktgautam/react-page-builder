@@ -3,7 +3,7 @@ import React from "react";
 import { useEditorStore } from "../lib/store";
 import { widgetRegistry } from "../lib/widgetRegistry";
 import type { TPageNode } from "@schema/core";
-import { BreakpointSwitcher } from "./BreakpointSwitcher";
+import { BreakpointSwitcher } from "./core/BreakpointSwitcher";
 import { resolveProps } from "../lib/resolveProps";
 import { DropSlot } from "../canvas/DropSlot"; // ⬅️ ADD: adjust path if needed
 

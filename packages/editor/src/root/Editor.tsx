@@ -1,6 +1,6 @@
 "use client";
-import EditorApp from "../components/EditorApp";
+import EditorLayout from "../components/EditorLayout";
 
 export function Editor() {
-return <EditorApp />;
+  return <EditorLayout />;
 }

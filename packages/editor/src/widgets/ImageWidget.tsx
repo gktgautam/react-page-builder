@@ -3,7 +3,9 @@
 
 "use client";
 import React from "react";
-import { styleFrom, propFrom, Breakpoint } from "../utils/style";
+import { styleFrom, propFrom } from "../utils/style";
+import { Breakpoint } from "@schema/core";
+
 
 type Props = {
   id: string;

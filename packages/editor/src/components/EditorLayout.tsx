@@ -4,9 +4,11 @@ import { DndContext, closestCenter } from "@dnd-kit/core";
 import { useEditorStore } from "../lib/store";
 import { widgetRegistry } from "../lib/widgetRegistry";
 import { makeOnDragEnd } from "../dnd/handlers";
+
 import { Sidebar } from "./Sidebar";
 import { EditorCanvas } from "./EditorCanvas";
 import { LayersPanel } from "./LayersPanel";
+import { PropertyPanel } from "./PropertyPanel";
 
 function createFromWidget(key: string) {
   const meta: any = widgetRegistry[key];
@@ -24,7 +26,7 @@ function createFromWidget(key: string) {
   };
 }
 
-export default function EditorApp() {
+export default function EditorLayout() {
   const moveNode = useEditorStore((s) => s.moveNode);
   const addChild = useEditorStore((s) => s.addChild);
 
@@ -33,9 +35,10 @@ export default function EditorApp() {
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
       <div className="flex h-screen">
-        <Sidebar />
-        <EditorCanvas />
-        <LayersPanel />
+      <Sidebar />
+      <EditorCanvas />
+      <LayersPanel />
+      <PropertyPanel />
       </div>
     </DndContext>
   );

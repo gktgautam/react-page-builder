@@ -1,2 +1,1 @@
-export { Editor } from "./root/Editor";
-export { Sidebar } from "./root/Sidebar";
+export { Editor } from "./root/Editor"; 

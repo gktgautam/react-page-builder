@@ -3,8 +3,10 @@
 
 "use client";
 import React from "react";
-import DOMPurify from "dompurify";
-import { styleFrom, propFrom, Breakpoint } from "../utils/style";
+import DOMPurify from "dompurify"; 
+import { styleFrom, propFrom } from "../utils/style";
+import { Breakpoint } from "@schema/core";
+
 
 type Props = {
   id: string;

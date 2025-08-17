@@ -1,11 +1,7 @@
-// packages/editor/src/components/StyleEditor.tsx
-// Drop this into your Property Panel "Style" section.
-// USAGE: <StyleEditor value={node.props} onChange={(next)=>updateProps(node.id, next)} activeBreakpoint={activeBreakpoint} />
-
+ 
 "use client";
 import React from "react";
-import { baseStyleKeys, BaseStyle } from "@schema/styles";
-import { Breakpoint } from "../utils/style";
+import { baseStyleKeys, BaseStyle, Breakpoint } from "@schema/core";
 
 type Props = {
   value: any; // full responsive props object for the node

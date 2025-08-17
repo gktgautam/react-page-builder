@@ -5,13 +5,13 @@ import { useEditorStore } from "../lib/store";
 import { TemplateGallery } from "./TemplateGallery";
 import { Panel, PanelHeader } from "@ui/core";
 import { findNode } from "../lib/findNode";
-import PreviewButton from "../components/PreviewButton";
+import PreviewButton from "./core/PreviewButton";
 import { useDraggable } from "@dnd-kit/core"; // ⬅️ NEW
 
 function DraggableWidgetButton({
   type,
   meta,
-  onClick,
+  onClick, 
 }: {
   type: string;
   meta: any;

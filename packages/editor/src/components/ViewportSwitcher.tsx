@@ -1,10 +1,12 @@
-"use client";
+"use client"; 
 import { useEditorStore } from "../lib/store";
+import { Breakpoint } from "@schema/core";
+
 
 export function ViewportSwitcher() {
-  const viewport = useEditorStore((s) => s.viewport);
-  const setViewport = useEditorStore((s) => s.setViewport);
-  const options: ("desktop" | "tablet" | "mobile")[] = [
+const viewport = useEditorStore((s) => s.activeBreakpoint);
+  const setViewport = useEditorStore((s) => s.setActiveBreakpoint);
+  const options: Breakpoint[] = [
     "desktop",
     "tablet",
     "mobile"
