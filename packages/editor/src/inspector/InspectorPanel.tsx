@@ -1,30 +1,42 @@
 "use client";
+
 import * as React from "react";
-import type { Node } from "@schema/core";
+import type { Node, PageDocument } from "@schema/core";
 import { useEditorStore } from "../store/createEditorStore";
 import { FieldControl } from "./FieldControl";
-import { getWidget } from "../widgets/registry";
+// ✅ import from the widgets index (not from ./registry)
+import { getWidget } from "../widgets";
 
-function getNode(doc: any, id?: string): Node | null {
+/** Find a node by id in the current document tree */
+function findNode(doc: PageDocument, id?: string | null): Node | null {
   if (!id) return null;
-  const stack = [doc.tree];
+  const stack: Node[] = [doc.tree];
   while (stack.length) {
     const cur = stack.pop()!;
     if (cur.id === id) return cur;
-    (cur.children ?? []).forEach((c: Node) => stack.push(c));
+    if (cur.children) stack.push(...cur.children);
   }
   return null;
 }
 
+/** Style tab controls */
 function StyleControls({ node }: { node: Node }) {
   const update = useEditorStore((s) => s.updateByPath);
   const id = node.id;
-  const make = (label: string, path: string, placeholder?: string, type: "text" | "color" = "text") => (
+
+  const make = (
+    label: string,
+    path: string,
+    placeholder?: string,
+    type: "text" | "color" = "text"
+  ) => (
     <label key={path} style={{ display: "block", marginBottom: 8 }}>
       <div style={{ fontSize: 12, marginBottom: 4 }}>{label}</div>
       <input
         type={type}
-        value={(path.split(".").reduce((o:any,k)=>o?.[k], node) ?? "") as any}
+        value={String(
+          path.split(".").reduce<any>((o, k) => (o ? o[k as keyof typeof o] : undefined), node) ?? ""
+        )}
         placeholder={placeholder}
         onChange={(e) => update(id, path, e.target.value)}
         style={{ width: "100%", padding: 8 }}
@@ -56,29 +68,33 @@ function StyleControls({ node }: { node: Node }) {
   );
 }
 
+/** Advanced tab controls */
 function AdvancedControls({ node }: { node: Node }) {
   const update = useEditorStore((s) => s.updateByPath);
   const id = node.id;
+
   return (
     <div>
       <label style={{ display: "block", marginBottom: 8 }}>
         <div style={{ fontSize: 12, marginBottom: 4 }}>HTML id</div>
         <input
           type="text"
-          value={node.props?._id ?? ""}
+          value={(node.props?._id ?? "") as string}
           onChange={(e) => update(id, "props._id", e.target.value)}
           style={{ width: "100%", padding: 8 }}
         />
       </label>
+
       <label style={{ display: "block", marginBottom: 8 }}>
         <div style={{ fontSize: 12, marginBottom: 4 }}>CSS class</div>
         <input
           type="text"
-          value={node.props?._className ?? ""}
+          value={(node.props?._className ?? "") as string}
           onChange={(e) => update(id, "props._className", e.target.value)}
           style={{ width: "100%", padding: 8 }}
         />
       </label>
+
       <p style={{ fontSize: 12, color: "#6b7280" }}>
         Use these to target the element in your custom CSS/JS at publish time.
       </p>
@@ -89,41 +105,51 @@ function AdvancedControls({ node }: { node: Node }) {
 export function InspectorPanel() {
   const doc = useEditorStore((s) => s.doc);
   const selectedId = useEditorStore((s) => s.selectedId);
-  const node = getNode(doc, selectedId);
+  const node = React.useMemo(() => findNode(doc, selectedId), [doc, selectedId]);
 
-  if (!node) return <div style={{ padding: 12, color: "#6b7280" }}>No selection</div>;
+  if (!node) {
+    return (
+      <aside style={{ width: 320, borderLeft: "1px solid #e5e7eb", background: "#fff" }}>
+        <div style={{ padding: 12, color: "#6b7280", fontSize: 12 }}>No selection</div>
+      </aside>
+    );
+  }
 
   const widget = getWidget(node.type);
 
   return (
-    <div style={{ padding: 12, borderLeft: "1px solid #e5e7eb" }}>
-      <div style={{ fontWeight: 600, marginBottom: 8 }}>{widget?.title ?? node.type}</div>
-      <Tabs
-        tabs={[
-          {
-            id: "content",
-            label: "Content",
-            content: (
-              <div>
-                {widget?.fields?.length
-                  ? widget.fields.map((f, idx) => <FieldControl key={idx} nodeId={node.id} field={f} />)
-                  : <div style={{ color: "#6b7280", fontSize: 12 }}>No content settings</div>}
-              </div>
-            )
-          },
-          { id: "style", label: "Style", content: <StyleControls node={node} /> },
-          { id: "advanced", label: "Advanced", content: <AdvancedControls node={node} /> }
-        ]}
-      />
-    </div>
+    <aside style={{ width: 320, borderLeft: "1px solid #e5e7eb", background: "#fff" }}>
+      <div style={{ padding: 12 }}>
+        <div style={{ fontWeight: 600, marginBottom: 8 }}>
+          {widget?.title ?? node.type}
+        </div>
+
+        <Tabs
+          tabs={[
+            {
+              id: "content",
+              label: "Content",
+              content: widget?.fields?.length ? (
+                <div>
+                  {widget.fields.map((f, idx) => (
+                    <FieldControl key={idx} nodeId={node.id} field={f} />
+                  ))}
+                </div>
+              ) : (
+                <div style={{ color: "#6b7280", fontSize: 12 }}>No content settings</div>
+              )
+            },
+            { id: "style", label: "Style", content: <StyleControls node={node} /> },
+            { id: "advanced", label: "Advanced", content: <AdvancedControls node={node} /> }
+          ]}
+        />
+      </div>
+    </aside>
   );
 }
 
-function Tabs({
-  tabs
-}: {
-  tabs: Array<{ id: string; label: string; content: React.ReactNode }>;
-}) {
+/** Simple tabs component */
+function Tabs({ tabs }: { tabs: Array<{ id: string; label: string; content: React.ReactNode }> }) {
   const [active, setActive] = React.useState(tabs[0]?.id);
   return (
     <div>

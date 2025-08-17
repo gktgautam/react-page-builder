@@ -1,214 +1,237 @@
+// packages/editor/src/store/createEditorStore.ts
 "use client";
+
+/**
+ * Zustand editor store – minimal but complete for:
+ * - doc (PageDocument)
+ * - selecting / hovering nodes
+ * - inserting / moving / removing nodes
+ * - updating nested props/styles via dot-paths (updateByPath)
+ * - breakpoint switching
+ *
+ * Works with the Elementor-style registry/render we set up.
+ */
 
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { produce } from "immer";
+import type { Node, PageDocument } from "@schema/core";
 
-import { migrateToLatest, PageDocumentZ, type Node, type PageDocument } from "@schema/core";
-import { findNode, insertChild, removeChild, replaceChild, replaceNodeInTree, reIdSubtree, deepClone, setByPath, updatePage } from "./utils";
-import type { EditorState } from "./types";
+// ---------- helpers ----------
 
-function pushHistory(state: EditorState, next: PageDocument) {
-  state.past.push(deepClone(state.doc));
-  state.doc = deepClone(next);
-  state.future = [];
+function deepClone<T>(v: T): T {
+  // Use native structuredClone if present:
+  // @ts-ignore
+  if (typeof structuredClone === "function") {
+    // @ts-ignore
+    return structuredClone(v);
+  }
+  return JSON.parse(JSON.stringify(v));
 }
- 
 
-function ensureValidDoc(doc: PageDocument): PageDocument {
-  const parsed = PageDocumentZ.safeParse(doc);
-  if (!parsed.success) throw new Error(`Invalid PageDocument: ${parsed.error.message}`);
-  return parsed.data;
+function findNode(root: Node, id: string): Node | null {
+  const stack: Node[] = [root];
+  while (stack.length) {
+    const cur = stack.pop()!;
+    if (cur.id === id) return cur;
+    if (cur.children) stack.push(...cur.children);
+  }
+  return null;
 }
+
+function replaceNodeInTree(root: Node, replace: Node): Node {
+  if (root.id === replace.id) return replace;
+  const out = { ...root, children: root.children ? [...root.children] : [] };
+  out.children = out.children?.map((c) => replaceNodeInTree(c, replace)) ?? [];
+  return out;
+}
+
+function removeNodeFromTree(root: Node, id: string): Node {
+  const clone = deepClone(root);
+  function walk(n: Node): boolean {
+    if (!n.children || n.children.length === 0) return false;
+    const idx = n.children.findIndex((c) => c.id === id);
+    if (idx >= 0) {
+      n.children.splice(idx, 1);
+      return true;
+    }
+    for (const c of n.children) {
+      if (walk(c)) return true;
+    }
+    return false;
+  }
+  walk(clone);
+  return clone;
+}
+
+function insertChild(root: Node, parentId: string, child: Node, index?: number): Node {
+  const clone = deepClone(root);
+  const parent = findNode(clone, parentId);
+  if (!parent) return clone;
+  parent.children = parent.children ? [...parent.children] : [];
+  const i = typeof index === "number" ? Math.max(0, Math.min(index, parent.children.length)) : parent.children.length;
+  parent.children.splice(i, 0, child);
+  return clone;
+}
+
+function moveChild(root: Node, srcParentId: string, srcIndex: number, dstParentId: string, dstIndex: number): Node {
+  const clone = deepClone(root);
+  const srcParent = findNode(clone, srcParentId);
+  const dstParent = findNode(clone, dstParentId);
+  if (!srcParent || !dstParent || !srcParent.children) return clone;
+
+  const [moved] = srcParent.children.splice(srcIndex, 1);
+  if (!moved) return clone;
+
+  dstParent.children = dstParent.children ? [...dstParent.children] : [];
+  const i = Math.max(0, Math.min(dstIndex, dstParent.children.length));
+  dstParent.children.splice(i, 0, moved);
+  return clone;
+}
+
+function setByPath(obj: any, path: string, value: any) {
+  const segs = path.split(".");
+  let cur = obj;
+  for (let i = 0; i < segs.length - 1; i++) {
+    const k = segs[i]!;
+    if (cur[k] == null || typeof cur[k] !== "object") cur[k] = {};
+    cur = cur[k];
+  }
+  cur[segs[segs.length - 1]!] = value;
+}
+
+// ---------- initial doc ----------
+
+const initialDoc: PageDocument = {
+  version: 1,
+  title: "Untitled page",
+  tree: {
+    id: "root",
+    type: "page",
+    props: {},
+    style: { display: "block" },
+    children: []
+  }
+};
+
+// ---------- types ----------
+
+export type Breakpoint = "desktop" | "tablet" | "mobile";
+
+export interface EditorState {
+  doc: PageDocument;
+
+  selectedId: string | null;
+  hoveredId: string | null;
+  activeBreakpoint: Breakpoint;
+
+  // selectors / actions
+  selectNode: (id: string | null) => void;
+  hoverNode: (id: string | null) => void;
+  setBreakpoint: (bp: Breakpoint) => void;
+
+  updateByPath: (nodeId: string, path: string, value: any) => void;
+
+  insertNode: (parentId: string, node: Node, index?: number) => void;
+  removeNode: (nodeId: string) => void;
+
+  moveNode: (srcParentId: string, srcIndex: number, dstParentId: string, dstIndex: number) => void;
+  addChild: (parentId: string, child: Node, index?: number) => void;
+}
+
+// ---------- store ----------
 
 export const useEditorStore = create<EditorState>()(
-  devtools(
-    (set, get) => ({
-      // INITIAL STATE — provide a tiny empty doc to start with
-      doc: {
-        version: 1,
-        title: "Untitled",
-        tree: {
-          id: "root",
-          type: "section",
-          props: {},
-          style: {},
-          children: [],
-        },
-      },
-      selectedId: undefined,
-      breakpoint: "base",
-      past: [],
-      future: [],
+  devtools((set, get) => ({
+    doc: initialDoc,
 
-      setDoc: (doc, push) =>
-        set(
-          produce<EditorState>((state) => {
-            const valid = ensureValidDoc(doc);
-            if (push) {
-              pushHistory(state, valid);
-            } else {
-              state.doc = deepClone(valid);
-            }
-          })
-        ),
+    selectedId: null,
+    hoveredId: null,
+    activeBreakpoint: "desktop",
 
-      loadFromUnknown: (input) =>
-        set(
-          produce<EditorState>((state) => {
-            const migrated = migrateToLatest(input);
-            state.past = [];
-            state.future = [];
-            state.doc = deepClone(migrated);
-            state.selectedId = migrated.tree.id;
-          })
-        ),
+    selectNode: (id) =>
+      set(
+        produce<EditorState>((s) => {
+          s.selectedId = id;
+        }),
+        false,
+        "selectNode"
+      ),
 
-      select: (id) =>
-        set(
-          produce<EditorState>((s) => {
-            s.selectedId = id;
-          })
-        ),
+    hoverNode: (id) =>
+      set(
+        produce<EditorState>((s) => {
+          s.hoveredId = id;
+        }),
+        false,
+        "hoverNode"
+      ),
 
-      updateByPath: (nodeId, path, value) =>
-        set(
-          produce<EditorState>((s) => {
-            const { node, parent, index } = findNode(s.doc.tree, nodeId) ?? {};
-            if (!node) return;
-            const updatedNode = setByPath(node, path, value) as Node;
-            const newTree = parent
-              ? replaceChild(parent, index!, updatedNode)
-              : updatedNode;
-            if (parent) {
-              // replace via walking from root
-              const nextRoot = replaceNodeInTree(s.doc.tree, parent.id, newTree);
-              pushHistory(s, updatePage(s.doc, nextRoot));
-            } else {
-              // node is root
-              pushHistory(s, updatePage(s.doc, updatedNode));
-            }
-          })
-        ),
+    setBreakpoint: (bp) =>
+      set(
+        produce<EditorState>((s) => {
+          s.activeBreakpoint = bp;
+        }),
+        false,
+        "setBreakpoint"
+      ),
 
-      insertNode: (parentId, newNode, atIndex) =>
-        set(
-          produce<EditorState>((s) => {
-            const located = findNode(s.doc.tree, parentId);
-            if (!located) return;
-            const newParent = insertChild(located.node, newNode, atIndex);
-            const nextRoot = replaceNodeInTree(s.doc.tree, parentId, newParent);
-            pushHistory(s, updatePage(s.doc, nextRoot));
-            s.selectedId = newNode.id;
-          })
-        ),
+    updateByPath: (nodeId, path, value) =>
+      set(
+        produce<EditorState>((s) => {
+          const n = findNode(s.doc.tree, nodeId);
+          if (!n) return;
+          // mutate in place via immer
+          setByPath(n, path, value);
+        }),
+        false,
+        `updateByPath:${path}`
+      ),
 
-      deleteNode: (nodeId) =>
-        set(
-          produce<EditorState>((s) => {
-            const located = findNode(s.doc.tree, nodeId);
-            if (!located) return;
-            const { parent, index } = located;
-            if (!parent) {
-              // avoid deleting root; clear children instead
-              const newRoot = deepClone(s.doc.tree);
-              newRoot.children = [];
-              pushHistory(s, updatePage(s.doc, newRoot));
-              s.selectedId = newRoot.id;
-              return;
-            }
-            const newParent = removeChild(parent, index);
-            const nextRoot = replaceNodeInTree(s.doc.tree, parent.id, newParent);
-            pushHistory(s, updatePage(s.doc, nextRoot));
-            s.selectedId = parent.id; // move selection to parent
-          })
-        ),
+    insertNode: (parentId, node, index) =>
+      set(
+        produce<EditorState>((s) => {
+          s.doc.tree = insertChild(s.doc.tree, parentId, node, index);
+        }),
+        false,
+        "insertNode"
+      ),
 
-      moveNode: (nodeId, targetParentId, atIndex) =>
-        set(
-          produce<EditorState>((s) => {
-            if (nodeId === targetParentId) return;
-            const src = findNode(s.doc.tree, nodeId);
-            const dst = findNode(s.doc.tree, targetParentId);
-            if (!src || !dst) return;
+    removeNode: (nodeId) =>
+      set(
+        produce<EditorState>((s) => {
+          // prevent removing root
+          if (s.doc.tree.id === nodeId) return;
+          s.doc.tree = removeNodeFromTree(s.doc.tree, nodeId);
+          if (s.selectedId === nodeId) s.selectedId = null;
+          if (s.hoveredId === nodeId) s.hoveredId = null;
+        }),
+        false,
+        "removeNode"
+      ),
 
-            // 1) remove from old parent (or if root, forbid)
-            const { parent: srcParent, index: srcIndex, node } = src;
-            if (!srcParent) return; // don't move root
-            const afterRemoval = removeChild(srcParent, srcIndex);
+    moveNode: (srcParentId, srcIndex, dstParentId, dstIndex) =>
+      set(
+        produce<EditorState>((s) => {
+          s.doc.tree = moveChild(s.doc.tree, srcParentId, srcIndex, dstParentId, dstIndex);
+        }),
+        false,
+        "moveNode"
+      ),
 
-            const rootAfterRemove = replaceNodeInTree(s.doc.tree, srcParent.id, afterRemoval);
-
-            // 2) insert into new parent
-            const dstInUpdatedTree = findNode(rootAfterRemove, targetParentId);
-            if (!dstInUpdatedTree) return;
-            const newParent = insertChild(dstInUpdatedTree.node, node, atIndex);
-            const nextRoot = replaceNodeInTree(rootAfterRemove, targetParentId, newParent);
-
-            pushHistory(s, updatePage(s.doc, nextRoot));
-            s.selectedId = node.id;
-          })
-        ),
-
-      reIdSubtree: (nodeId) =>
-        set(
-          produce<EditorState>((s) => {
-            const located = findNode(s.doc.tree, nodeId);
-            if (!located) return;
-            const reIded = reIdSubtree(located.node);
-            const nextRoot = replaceNodeInTree(s.doc.tree, nodeId, reIded);
-            pushHistory(s, updatePage(s.doc, nextRoot));
-            s.selectedId = reIded.id;
-          })
-        ),
-
-      undo: () =>
-        set(
-          produce<EditorState>((s) => {
-            if (s.past.length === 0) return;
-            const prev = s.past.pop()!;
-            s.future.unshift(deepClone(s.doc));
-            s.doc = deepClone(prev);
-            // keep selection safe
-            const found = findNode(s.doc.tree, s.selectedId ?? "");
-            if (!found || !found.node) {
-              s.selectedId = s.doc.tree.id;
-            }
-          })
-        ),
-
-      redo: () =>
-        set(
-          produce<EditorState>((s) => {
-            if (s.future.length === 0) return;
-            const next = s.future.shift()!;
-            s.past.push(deepClone(s.doc));
-            s.doc = deepClone(next);
-            const foundNode = findNode(s.doc.tree, s.selectedId ?? "");
-            if (!foundNode || !foundNode.node) {
-              s.selectedId = s.doc.tree.id;
-            }
-          })
-        ),
-
-      canUndo: () => get().past.length > 0,
-      canRedo: () => get().future.length > 0,
-
-      setBreakpoint: (bp) =>
-        set(
-          produce<EditorState>((s) => {
-            s.breakpoint = bp;
-          })
-        ),
-
-      resetHistory: () =>
-        set(
-          produce<EditorState>((s) => {
-            s.past = [];
-            s.future = [];
-          })
-        ),
-    }),
-    { name: "editor-store" }
-  )
+    addChild: (parentId, child, index) =>
+      set(
+        produce<EditorState>((s) => {
+          s.doc.tree = insertChild(s.doc.tree, parentId, child, index);
+        }),
+        false,
+        "addChild"
+      )
+  }))
 );
+
+// ---------- optional barrel re-exports for older imports ----------
+
+// Some older files may import from "../store" directly.
+// Create `packages/editor/src/store/index.ts` with:
+// export * from "./createEditorStore";
