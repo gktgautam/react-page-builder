@@ -152,8 +152,8 @@ export const useEditorStore = create<EditorState>((set) => ({
       return { page: inserted };
     }),
 
-  updateProps: (id, newProps) =>
-    set((state) => {
+  updateProps: (id: string, newProps: Record<string, unknown>) =>
+    set((state: EditorState) => {
       const bp = state.activeBreakpoint;
       const updated = deepMap(state.page, (n) => {
         if (n.id === id) {
