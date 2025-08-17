@@ -1,64 +1,54 @@
-// packages/editor/src/dnd/handlers.ts
-// Call onDragEnd from your DnDContext. Wire your addChild/moveNode here.
-
-import type { DragEndEvent } from "@dnd-kit/core";
+// Call from your top-level <DndContext onDragEnd={...}>
+import { widgetRegistry } from "../lib/widgetRegistry";
+import type { PageNode } from "../lib/store";
+import { findNode } from "../lib/findNode";
 
 type MoveFn = (nodeId: string, nextParentId: string, index: number) => void;
 type AddChildFn = (parentId: string, nodeJson: any, index?: number) => void;
-type CreateFromWidgetFn = (widgetKey: string) => any; // returns a new node
-type IsDescendantFn = (targetParentId: string, movingNodeId: string) => boolean; // optional safety
+type CreateFromWidgetFn = (widgetKey: string) => any;
 
-type DragData =
-  | { type: "NEW_WIDGET"; widgetKey: string }
-  | { type: "TEMPLATE_SECTION"; nodeJson: any }
-  | Record<string, unknown>;
+function canDrop(parentType: string, childType: string) {
+  const allowed = widgetRegistry[parentType]?.allowedChildren as string[] | undefined;
+  return !allowed || allowed.includes(childType);
+}
 
 export function makeOnDragEnd({
-  moveNode,
-  addChild,
-  createFromWidget,
-  isDescendant, // optional: pass if you want to block dropping into self/descendant
+  moveNode, addChild, createFromWidget, getPage,
 }: {
   moveNode: MoveFn;
   addChild: AddChildFn;
   createFromWidget: CreateFromWidgetFn;
-  isDescendant?: IsDescendantFn;
+  getPage: () => PageNode;
 }) {
-  return function onDragEnd(event: DragEndEvent) {
+  return function onDragEnd(event: any) {
     const { over, active } = event;
     if (!over) return;
-
-    // Expect DropSlot ids like: "drop:<parentId>:<index>"
-    const overId = String(over.id);
-    const m = /^drop:(.+):(\d+)$/.exec(overId);
+    const m = /^drop:(.+):(\d+)$/.exec(String(over.id));
     if (!m) return;
 
     const parentId = m[1];
-    const index = Number(m[2]);
+    const index = parseInt(m[2], 10);
+    const page = getPage();
+    const parentNode = findNode(page, parentId);
+    if (!parentNode) return;
 
-    const data = (active?.data?.current || {}) as DragData;
-
-    // Optional guard: prevent dropping into own descendant
-    // (only works if you provide isDescendant from your store)
-    if (isDescendant && typeof active.id === "string") {
+    const data = active?.data?.current || {};
+    if (data.type === "NEW_WIDGET") {
+      const newNode = createFromWidget(data.widgetKey);
+      if (canDrop(parentNode.type, newNode.type)) addChild(parentId, newNode, index);
+      return;
+    }
+    if (data.type === "TEMPLATE_SECTION" && data.nodeJson) {
+      if (canDrop(parentNode.type, data.nodeJson.type)) addChild(parentId, data.nodeJson, index);
+      return;
+    }
+    // Move existing
+    if (active?.id) {
       const movingId = String(active.id);
-      if (isDescendant(parentId, movingId)) return;
+      // Optional: prevent dropping into its own descendant
+      const moving = findNode(page, movingId);
+      if (!moving) return;
+      if (canDrop(parentNode.type, moving.type)) moveNode(movingId, parentId, index);
     }
-
-    // New widget dragged from sidebar
-    if ((data as any).type === "NEW_WIDGET" && (data as any).widgetKey) {
-      const widgetKey = (data as any).widgetKey as string;
-      addChild(parentId, createFromWidget(widgetKey), index);
-      return;
-    }
-
-    // Dropping a prebuilt section/template
-    if ((data as any).type === "TEMPLATE_SECTION" && (data as any).nodeJson) {
-      addChild(parentId, (data as any).nodeJson, index);
-      return;
-    }
-
-    // Moving an existing node
-    moveNode(String(active.id), parentId, index);
   };
 }

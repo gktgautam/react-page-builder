@@ -14,9 +14,16 @@ export default function PreviewButton({
     setLoading(true);
     try {
       const page = getPageJson();
-      const key = `preview_${Date.now()}`;
-      localStorage.setItem(key, JSON.stringify(page));
-      window.open(`/preview.html?key=${encodeURIComponent(key)}`, "_blank", "noopener,noreferrer");
+      const res = await fetch("/api/pages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(page),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      const { pageId } = await res.json();
+      window.open(`/preview/${encodeURIComponent(pageId)}`, "_blank", "noopener,noreferrer");
+    } catch (e: any) {
+      alert(e?.message || "Preview failed");
     } finally {
       setLoading(false);
     }

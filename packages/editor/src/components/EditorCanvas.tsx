@@ -2,30 +2,37 @@
 import React from "react";
 import { useEditorStore } from "../lib/store";
 import { widgetRegistry } from "../lib/widgetRegistry";
-import type { TPageNode } from "@schema/core";
+import type { PageNode } from "../lib/store";
+import { DropSlot } from "./DropSlot";
 import { BreakpointSwitcher } from "./core/BreakpointSwitcher";
-import { resolveProps } from "../lib/resolveProps";
-import { DropSlot } from "../canvas/DropSlot"; // ⬅️ ADD: adjust path if needed
 
-function RenderNode({ node }: { node: TPageNode }) {
+function resolveProps(node: PageNode, bp: "desktop"|"tablet"|"mobile") {
+  // mobile-first cascade for props (non-style)
+  const base = { ...(node.props || {}) };
+  const tb   = { ...(node.props?.tablet || {}) };
+  const ds   = { ...(node.props?.desktop || {}) };
+  delete (base as any).style; delete (tb as any).style; delete (ds as any).style;
+  if (bp === "desktop") return { ...base, ...tb, ...ds };
+  if (bp === "tablet")  return { ...base, ...tb };
+  return { ...base };
+}
+
+function RenderNode({ node }: { node: PageNode }) {
   const hoveredId = useEditorStore((s) => s.hoveredId);
   const selectedId = useEditorStore((s) => s.selectedId);
   const selectNode = useEditorStore((s) => s.selectNode);
   const activeBreakpoint = useEditorStore((s) => s.activeBreakpoint);
 
-  // Root Page behaves like a container; render slots between children + one at the end
   if (node.type === "Page") {
-    const children = node.children ?? [];
+    const children = node.children || [];
     return (
-      <div>
-        {children.map((child: TPageNode, i: number) => (
+      <div onClick={() => selectNode(node.id)}>
+        {children.map((child, i) => (
           <React.Fragment key={child.id}>
-            {/* ⬇️ Drop target BEFORE each child */}
             <DropSlot parentId={node.id} index={i} />
             <RenderNode node={child} />
           </React.Fragment>
         ))}
-        {/* ⬇️ Final drop target at the end */}
         <DropSlot parentId={node.id} index={children.length} />
       </div>
     );
@@ -33,8 +40,8 @@ function RenderNode({ node }: { node: TPageNode }) {
 
   const meta = widgetRegistry[node.type];
   if (!meta) return null;
-  const Comp = meta.component;
-  const mergedProps = resolveProps(node as any, activeBreakpoint);
+  const Comp: any = meta.component;
+  const mergedProps = resolveProps(node, activeBreakpoint);
 
   const border =
     node.id === selectedId
@@ -43,30 +50,27 @@ function RenderNode({ node }: { node: TPageNode }) {
       ? "border border-orange-400"
       : "border border-transparent";
 
-  const children = node.children ?? [];
+  const children = node.children || [];
 
   return (
     <div
       className={`${border} relative`}
-      onClick={(e) => {
-        e.stopPropagation();
-        selectNode(node.id);
-      }}
+      onMouseEnter={() => useEditorStore.getState().hoverNode(node.id)}
+      onMouseLeave={() => useEditorStore.getState().hoverNode(null)}
+      onClick={(e) => { e.stopPropagation(); selectNode(node.id); }}
     >
       <Comp id={node.id} {...mergedProps}>
-        {meta.isContainer ? (
+        {meta.isContainer && (
           <>
-            {children.map((child: TPageNode, i: number) => (
+            {children.map((child, i) => (
               <React.Fragment key={child.id}>
-                {/* ⬇️ Drop target BEFORE each child within containers */}
                 <DropSlot parentId={node.id} index={i} />
                 <RenderNode node={child} />
               </React.Fragment>
             ))}
-            {/* ⬇️ Final drop target at the end of this container */}
             <DropSlot parentId={node.id} index={children.length} />
           </>
-        ) : null}
+        )}
       </Comp>
     </div>
   );
@@ -76,12 +80,9 @@ export function EditorCanvas() {
   const page = useEditorStore((s) => s.page);
   const viewport = useEditorStore((s) => s.activeBreakpoint);
   const widthClass =
-    viewport === "desktop"
-      ? "w-[1024px]"
-      : viewport === "tablet"
-      ? "w-[768px]"
-      : "w-[375px]";
-
+    viewport === "desktop" ? "w-[1024px]" :
+    viewport === "tablet"  ? "w-[768px]"  :
+                             "w-[375px]";
   return (
     <main className="flex-1 overflow-auto bg-gray-50 p-6">
       <BreakpointSwitcher />

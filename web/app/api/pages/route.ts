@@ -1,17 +1,18 @@
-// packages/web/src/app/api/pages/route.ts
-// POST = save page; returns { pageId }. (You can extend with GET later.)
-
 import { NextResponse } from "next/server";
-import { getTenantFromHeaders, savePage } from "../_store";
+
+const store: Map<string, any> = (global as any).__pages ??= new Map<string, any>();
+let lastId: string | null = null;
 
 export async function POST(req: Request) {
-  try {
-    const tenant = getTenantFromHeaders(req.headers);
-    const body = await req.json();
-    // TODO: Optionally validate against your PageSchema here.
-    const pageId = savePage(tenant, body);
-    return NextResponse.json({ ok: true, pageId });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "Failed to save" }, { status: 400 });
-  }
+  const body = await req.json();
+  const id = body?.id || crypto.randomUUID();
+  body.id = id;
+  store.set(id, body);
+  lastId = id;
+  return NextResponse.json({ ok: true, pageId: id });
+}
+
+export async function GET() {
+  if (!lastId) return NextResponse.json({ error: "No page" }, { status: 404 });
+  return NextResponse.json(store.get(lastId));
 }

@@ -1,22 +1,37 @@
 // packages/schema/src/styles.ts
-// Reusable, simple style schema for all widgets.
+// Reusable style schema + responsive types shared by editor, widgets, and preview.
+
+export type Breakpoint = "desktop" | "tablet" | "mobile";
 
 export const baseStyleKeys = [
+  // Spacing
   "marginTop","marginRight","marginBottom","marginLeft",
   "paddingTop","paddingRight","paddingBottom","paddingLeft",
-  "color","backgroundColor","borderColor","borderWidth","borderStyle","borderRadius",
-  "fontFamily","fontSize","fontWeight","lineHeight","letterSpacing","textTransform","textDecoration",
-  "textAlign","width","maxWidth","minWidth","height","maxHeight","minHeight",
-  "boxShadow","opacity","display","gap","justifyContent","alignItems","flexDirection","flex","flexWrap"
+
+  // Typography
+  "color","fontFamily","fontSize","fontWeight","lineHeight",
+  "letterSpacing","textTransform","textDecoration","textAlign",
+
+  // Size
+  "width","maxWidth","minWidth","height","maxHeight","minHeight",
+
+  // Background / Border
+  "backgroundColor","borderColor","borderWidth","borderStyle","borderRadius",
+
+  // Effects
+  "boxShadow","opacity",
+
+  // Layout helpers
+  "display","gap","justifyContent","alignItems","flexDirection","flex","flexWrap",
 ] as const;
 
 export type BaseStyle = Partial<Record<(typeof baseStyleKeys)[number], string>>;
 
-// Typical per‑breakpoint props structure you can reuse:
+/** Mobile-first responsive props envelope. */
 export type ResponsiveProps<T = Record<string, any>> = {
+  // base = mobile
+  style?: BaseStyle;
   desktop?: T & { style?: BaseStyle };
   tablet?: T & { style?: BaseStyle };
-  mobile?: T & { style?: BaseStyle };
-};
-
-export type Breakpoint = "desktop" | "tablet" | "mobile";  // ✅ add
+  mobile?: T & { style?: BaseStyle }; // optional explicit mobile override (rare)
+} & T;

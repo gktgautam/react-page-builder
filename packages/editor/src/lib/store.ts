@@ -1,83 +1,72 @@
 "use client";
 import { create } from "zustand";
-import type { TPageNode } from "@schema/core";
+import type { Breakpoint, ResponsiveProps } from "@schema/core";
+import { deepMerge } from "./deepMerge";
+import { findNode, findNodeWithParent } from "./findNode";
 
-export interface PageNode extends TPageNode {}
+export type PageNode = {
+  id: string;
+  type: string;
+  props: ResponsiveProps<any>; // mobile-first envelope
+  children: PageNode[];        // always array
+};
 
-interface EditorState {
+export interface EditorState {
   page: PageNode;
-  selectedId: string | null;
   hoveredId: string | null;
+  selectedId: string | null;
+  activeBreakpoint: Breakpoint;
   expandedNodes: string[];
-  activeBreakpoint: 'desktop' | 'tablet' | 'mobile';
-  selectNode: (id: string | null) => void;
-  hoverNode: (id: string | null) => void;
-  toggleExpand: (id: string) => void;
+
   setPage: (page: PageNode) => void;
-  addChild: (parentId: string, node: PageNode, index?: number) => void;
-  moveNode: (id: string, newParentId: string, index: number) => void;
-  updateProps: (id: string, newProps: Record<string, unknown>) => void;
-  setActiveBreakpoint: (v: 'desktop' | 'tablet' | 'mobile') => void;
+  hoverNode: (id: string | null) => void;
+  selectNode: (id: string | null) => void;
+  toggleExpand: (id: string) => void;
+  setActiveBreakpoint: (bp: Breakpoint) => void;
+
+  addChild: (parentId: string, nodeJson: PageNode, index?: number) => void;
+  moveNode: (nodeId: string, nextParentId: string, index: number) => void;
+  updateProps: (nodeId: string, patch: Partial<ResponsiveProps<any>>) => void;
 }
 
-function deepMap(node: PageNode, fn: (n: PageNode) => PageNode): PageNode {
-  return fn({ ...node, children: node.children?.map((c:any) => deepMap(c as PageNode, fn)) });
-}
-
-function findAncestorIds(node: PageNode, targetId: string): string[] | null {
-  if (node.id === targetId) return [];
-  for (const child of node.children || []) {
-    const result = findAncestorIds(child as PageNode, targetId);
-    if (result) {
-      return [node.id, ...result];
-    }
-  }
-  return null;
-}
-
-export const useEditorStore = create<EditorState>((set) => ({
-  page: {
-    id: "page-root",
+function samplePage(): PageNode {
+  return {
+    id: "root",
     type: "Page",
     props: {},
     children: [
       {
-        id: "section-1",
+        id: "sec1",
         type: "Section",
-        props: {
-          layoutStyle: "contained",
-          padding: "24px",
-          backgroundColor: "#f7f7f7",
-        },
+        props: { style: { paddingTop: "40px", paddingBottom: "40px", backgroundColor: "#ffffff" } },
         children: [
           {
-            id: "row-1",
+            id: "row1",
             type: "Row",
-            props: {},
+            props: { style: { gap: "16px" } },
             children: [
               {
-                id: "col-1",
+                id: "col1",
                 type: "Column",
-                props: { span: 12 },
-                responsive: { desktop: { span: 6 } },
+                props: { style: { minWidth: "280px", flex: "1" } },
                 children: [
                   {
-                    id: "heading-1",
+                    id: "h1",
                     type: "Heading",
-                    props: { text: "Hello", fontSize: "32px" },
+                    props: {
+                      text: "Your Heading",
+                      style: { fontSize: "32px", fontWeight: "700", marginBottom: "8px" },
+                    },
+                    children: [],
                   },
-                ],
-              },
-              {
-                id: "col-2",
-                type: "Column",
-                props: { span: 12 },
-                responsive: { desktop: { span: 6 } },
-                children: [
                   {
-                    id: "text-1",
+                    id: "p1",
                     type: "Text",
-                    props: { text: "Subheading", fontSize: "18px" },
+                    props: {
+                      text: "Start building your page…",
+                      style: { fontSize: "16px", lineHeight: "24px", color: "#444" },
+                    },
+                    children: [],
                   },
                 ],
               },
@@ -86,87 +75,75 @@ export const useEditorStore = create<EditorState>((set) => ({
         ],
       },
     ],
-  },
-  selectedId: null,
+  };
+}
+
+export const useEditorStore = create<EditorState>()((set, get) => ({
+  page: samplePage(),
   hoveredId: null,
-  expandedNodes: [],
+  selectedId: null,
   activeBreakpoint: "desktop",
-  selectNode: (id) =>
-    set((state) => {
-      if (!id) return { selectedId: null };
-      const ancestors =
-        findAncestorIds(state.page, id)?.filter((n) => n !== state.page.id) || [];
-      const expanded = Array.from(
-        new Set([...state.expandedNodes, ...ancestors])
-      );
-      return { selectedId: id, expandedNodes: expanded };
-    }),
-  hoverNode: (id) => set({ hoveredId: id }),
-  toggleExpand: (id) =>
-    set((state) => ({
-      expandedNodes: state.expandedNodes.includes(id)
-        ? state.expandedNodes.filter((n) => n !== id)
-        : [...state.expandedNodes, id]
-    })),
+  expandedNodes: [],
+
   setPage: (page) => set({ page }),
-  setActiveBreakpoint: (v) => set({ activeBreakpoint: v }),
+  hoverNode: (id) => set({ hoveredId: id }),
+  selectNode: (id) => set((s) => ({
+    selectedId: id,
+    expandedNodes: id ? expandAncestors(s.page, id) : s.expandedNodes,
+  })),
+  toggleExpand: (id) => set((s) => ({
+    expandedNodes: s.expandedNodes.includes(id)
+      ? s.expandedNodes.filter(x => x !== id)
+      : [...s.expandedNodes, id],
+  })),
+  setActiveBreakpoint: (bp) => set({ activeBreakpoint: bp }),
 
-  addChild: (parentId, node, index = 0) =>
-    set((state) => {
-      const insert = (n: PageNode): PageNode => {
-        if (n.id === parentId) {
-          const copy = [...(n.children || [])];
-          copy.splice(index, 0, node);
-          return { ...n, children: copy };
-        }
-        return { ...n, children: n.children?.map(insert) || [] };
-      };
-      return { page: insert(state.page) };
-    }),
+  addChild: (parentId, nodeJson, index) => set((s) => {
+    const copy = structuredClone(s.page);
+    const parent = findNode(copy, parentId);
+    if (!parent) return {};
+    parent.children = parent.children ?? [];
+    const i = Math.min(Math.max(0, index ?? parent.children.length), parent.children.length);
+    const node = { ...nodeJson, children: nodeJson.children ?? [] };
+    parent.children.splice(i, 0, node);
+    return { page: copy };
+  }),
 
-  moveNode: (id, newParentId, index) =>
-    set((state) => {
-      let moving: PageNode | null = null;
+  moveNode: (nodeId, nextParentId, index) => set((s) => {
+    if (nodeId === nextParentId) return {};
+    const copy = structuredClone(s.page);
+    const { node, parent } = findNodeWithParent(copy, nodeId);
+    if (!node || !parent) return {};
+    parent.children = parent.children ?? [];
+    const oldIdx = parent.children.findIndex((c) => c.id === nodeId);
+    if (oldIdx >= 0) parent.children.splice(oldIdx, 1);
 
-      const removed = deepMap(state.page, (n) => {
-        if (!n.children) return n;
-        const filtered = n.children.filter((c:any) => {
-          if (c.id === id) {
-            moving = c as PageNode;
-            return false;
-          }
-          return true;
-        });
-        return { ...n, children: filtered.map((c:any) => c as PageNode) };
-      });
+    const newParent = findNode(copy, nextParentId);
+    if (!newParent) return {};
+    newParent.children = newParent.children ?? [];
+    const i = Math.min(Math.max(0, index), newParent.children.length);
+    newParent.children.splice(i, 0, node);
+    return { page: copy };
+  }),
 
-      const inserted = deepMap(removed, (n) => {
-        if (n.id === newParentId && moving) {
-          const copy = [...(n.children || [])];
-          copy.splice(index, 0, moving);
-          return { ...n, children: copy };
-        }
-        return n;
-      });
-
-      return { page: inserted };
-    }),
-
-  updateProps: (id, newProps) =>
-    set((state) => {
-      const bp = state.activeBreakpoint;
-      const updated = deepMap(state.page, (n) => {
-        if (n.id === id) {
-          if (bp === 'mobile') {
-            return { ...n, props: { ...n.props, ...newProps } };
-          }
-          const responsive = { ...(n as any).responsive };
-          const current = responsive[bp] || {};
-          responsive[bp] = { ...current, ...newProps };
-          return { ...n, responsive } as any;
-        }
-        return n;
-      });
-      return { page: updated };
-    })
+  updateProps: (nodeId, patch) => set((s) => {
+    const copy = structuredClone(s.page);
+    const node = findNode(copy, nodeId);
+    if (!node) return {};
+    node.props = deepMerge(node.props ?? {}, patch);
+    return { page: copy };
+  }),
 }));
+
+function expandAncestors(root: PageNode, id: string): string[] {
+  const path: string[] = [];
+  function dfs(n: PageNode, trail: string[]) {
+    if (n.id === id) { path.push(...trail); return true; }
+    for (const c of n.children || []) {
+      if (dfs(c, [...trail, n.id])) return true;
+    }
+    return false;
+  }
+  dfs(root, []);
+  return Array.from(new Set(path));
+}

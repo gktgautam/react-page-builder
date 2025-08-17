@@ -1,24 +1,25 @@
-// packages/editor/src/utils/style.ts
-import { 
-BaseStyle, 
-Breakpoint, 
-ResponsiveProps, 
-} from "@schema/core";
+import { BaseStyle, Breakpoint, ResponsiveProps } from "@schema/core";
 
-export function styleFrom(props: ResponsiveProps<any> | undefined, active: Breakpoint): BaseStyle {
-  const desk = props?.desktop?.style || {};
-  const cur  = props?.[active as keyof ResponsiveProps<any> as "desktop"]?.style || {};
-  return { ...desk, ...cur };
+/** Mobile-first style merge: base → tablet → desktop depending on target bp. */
+export function styleFrom(props: ResponsiveProps<any> | undefined, bp: Breakpoint): BaseStyle {
+  const base = props?.style || {};
+  const tb   = props?.tablet?.style || {};
+  const ds   = props?.desktop?.style || {};
+  if (bp === "desktop") return { ...base, ...tb, ...ds };
+  if (bp === "tablet")  return { ...base, ...tb };
+  return { ...base }; // mobile
 }
 
-// read a logical prop (text, href, src, etc) with desktop fallback
-export function propFrom<T = any>(props: ResponsiveProps<any> | undefined, key: string, active: Breakpoint): T | undefined {
-  const cur = props?.[active]?.[key];
-  if (cur !== undefined) return cur as T;
-  return props?.desktop?.[key] as T | undefined;
+/** Get a logical prop (text, href, src, etc.) mobile-first cascading. */
+export function propFrom<T = any>(props: ResponsiveProps<any> | undefined, key: string, bp: Breakpoint): T | undefined {
+  const base = (props as any)?.[key];
+  const tb   = (props as any)?.tablet?.[key];
+  const ds   = (props as any)?.desktop?.[key];
+  if (bp === "desktop") return (ds ?? tb ?? base) as T | undefined;
+  if (bp === "tablet")  return (tb ?? base) as T | undefined;
+  return base as T | undefined;
 }
 
-// convert inline style object to style string (for SSR/preview)
 export function inlineStyle(style: Record<string, string | number | undefined> = {}) {
   return Object.entries(style)
     .filter(([,v]) => v !== undefined && v !== "")
