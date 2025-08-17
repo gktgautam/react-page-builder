@@ -2,11 +2,21 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
+    "rootDir": "src",
     "declaration": true,
-    "jsx": "react-jsx",
-    "types": ["react", "react-dom"],
+    "module": "CommonJS",
+    "target": "ES2022",
+    "moduleResolution": "Node",
     "skipLibCheck": true,
-    "paths": {}
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@schema/core": ["../schema/dist/index.d.ts"],
+      "@ui/core": ["../ui/dist/index.d.ts"]
+    }
   },
-  "include": ["src/**/*"]
+  "include": ["src"],
+  "references": [{ "path": "../schema" }, { "path": "../ui" }]
 }

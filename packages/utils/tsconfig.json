@@ -1,5 +1,22 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "outDir": "dist", "declaration": true },
-  "include": ["src/**/*"]
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "module": "CommonJS",
+    "target": "ES2022",
+    "moduleResolution": "Node",
+    "skipLibCheck": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@schema/core": ["../schema/dist/index.d.ts"],
+      "@ui/core": ["../ui/dist/index.d.ts"]
+    }
+  },
+  "include": ["src"],
+  "references": [{ "path": "../schema" }, { "path": "../ui" }]
 }

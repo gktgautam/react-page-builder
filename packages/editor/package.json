@@ -20,6 +20,7 @@
     "@schema/core": "workspace:*",
     "@ui/core": "workspace:*",
     "dompurify": "^3.2.6",
+    "immer": "^10.1.1",
     "nanoid": "^5.0.7",
     "react-contenteditable": "^3.3.7",
     "zustand": "^4.5.5"

@@ -1,152 +1,30 @@
 "use client";
-import type React from "react";
-import HeadingWidget from "../widgets/HeadingWidget";
-import TextWidget from "../widgets/TextWidget";
-import ButtonWidget from "../widgets/ButtonWidget";
-import SectionWidget from "../widgets/SectionWidget";
-import RowWidget from "../widgets/RowWidget";
-import ColumnWidget from "../widgets/ColumnWidget";
+import * as React from "react";
 
-export type WidgetPropInputType = "text" | "color";
+// ✅ import from ../widgets (index.ts exports registerDefaultWidgets)
+import {
+  registerDefaultWidgets,
+  getWidget,
+  widgetsByCategory,
+  type Widget as NewWidget
+} from "../widgets";
 
-export type WidgetMeta = {
-  component: React.ComponentType<any>;
-  name: string;
-  defaultProps: Record<string, unknown>;
-  propsSchema: Record<string, WidgetPropInputType>;
-  isContainer: boolean;
-  icon: string;
-};
+// call this once at app boot (editor page) to register everything
+export function ensureWidgetsRegistered() {
+  // idempotent: calling multiple times is fine
+  if (!(globalThis as any).__widgets_registered__) {
+    registerDefaultWidgets();
+    (globalThis as any).__widgets_registered__ = true;
+  }
+}
 
-export const widgetRegistry: Record<string, WidgetMeta> = {
-  Section: {
-    component: SectionWidget,
-    name: "Section",
-    defaultProps: {
-      padding: "16px",
-      backgroundColor: "#f3f4f6",
-      layoutStyle: "contained",
-    },
-    propsSchema: {
-      padding: "text",
-      backgroundColor: "color",
-      layoutStyle: "text",
-    },
-    isContainer: true,
-    icon: "📦",
-  },
-  Row: {
-    component: RowWidget,
-    name: "Row",
-    defaultProps: {
-      gap: "0px",
-    },
-    propsSchema: {
-      gap: "text",
-    },
-    isContainer: true,
-    icon: "📏",
-  },
-  Column: {
-    component: ColumnWidget,
-    name: "Column",
-    defaultProps: {
-      span: 12,
-    },
-    propsSchema: {
-      span: "text",
-    },
-    isContainer: true,
-    icon: "⬜",
-  },
-  Heading: {
-    component: HeadingWidget,
-    name: "Heading",
-    defaultProps: {
-      desktop: {
-        text: "Heading Text",
-        padding: "8px 0",
-        color: "#333333",
-        fontSize: "32px",
-        backgroundColor: "transparent",
-        textAlign: "left",
-        fontWeight: "700",
-        fontFamily: "Inter, sans-serif",
-        lineHeight: "1.2em",
-      },
-    },
-    propsSchema: {
-      text: "text",
-      padding: "text",
-      color: "color",
-      fontSize: "text",
-      backgroundColor: "color",
-      textAlign: "text",
-      fontWeight: "text",
-      fontFamily: "text",
-      lineHeight: "text",
-    },
-    isContainer: false,
-    icon: "🔠",
-  },
-  Text: {
-    component: TextWidget,
-    name: "Text",
-    defaultProps: {
-      desktop: {
-        text: "Edit me",
-        padding: "8px",
-        color: "#333333",
-        fontSize: "16px",
-        backgroundColor: "transparent",
-        textAlign: "left",
-        fontWeight: "400",
-        fontFamily: "Inter, sans-serif",
-        lineHeight: "1.5em",
-      },
-    },
-    propsSchema: {
-      text: "text",
-      padding: "text",
-      color: "color",
-      fontSize: "text",
-      backgroundColor: "color",
-      textAlign: "text",
-      fontWeight: "text",
-      fontFamily: "text",
-      lineHeight: "text",
-    },
-    isContainer: false,
-    icon: "✏️",
-  },
-  Button: {
-    component: ButtonWidget,
-    name: "Button",
-    defaultProps: {
-      desktop: {
-        label: "Click Me",
-        href: "#",
-        padding: "12px 24px",
-        color: "#ffffff",
-        fontSize: "16px",
-        backgroundColor: "#3b82f6",
-        borderRadius: "8px",
-        fontWeight: "700",
-        fontFamily: "Inter, sans-serif",
-      },
-    },
-    propsSchema: {
-      label: "text",
-      href: "text",
-      padding: "text",
-      color: "color",
-      fontSize: "text",
-      backgroundColor: "color",
-      borderRadius: "text",
-      fontWeight: "text",
-      fontFamily: "text",
-    },
-    isContainer: false,
-    icon: "🔘",
-  },
-};
+// Legacy compatibility type alias
+export type WidgetMeta = NewWidget & { allowedChildren?: string[] };
+
+// Compatibility helper for code that expected "allowedChildren"
+export function getAllowedChildren(type: string): string[] | undefined {
+  const w = getWidget(type);
+  return w?.acceptsChildTypes;
+}
+
+export { getWidget, widgetsByCategory };
